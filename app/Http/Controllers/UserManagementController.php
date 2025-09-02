@@ -1,0 +1,187 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Mail\InvitationMail;
+use App\Mail\CredentialsMail;
+use App\Models\Invitation;
+use App\Models\Role;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class UserManagementController extends Controller
+{
+    /**
+     * Display the user management page (only for colegio role).
+     */
+    public function index(Request $request): Response
+    {
+        // Verificar que el usuario sea colegio
+        if (!$request->user()->isColegio()) {
+            abort(403, 'Acceso denegado. Solo los colegios pueden gestionar usuarios.');
+        }
+
+        $users = User::with('role')->get();
+        $invitations = Invitation::with('role')->where('status', 'pending')->get();
+        $roles = Role::whereIn('name', ['profesor', 'padre'])->get();
+
+        return Inertia::render('UserManagement/Index', [
+            'users' => $users,
+            'invitations' => $invitations,
+            'roles' => $roles,
+        ]);
+    }
+
+    /**
+     * Send invitation to create a new user.
+     */
+    public function sendInvitation(Request $request)
+    {
+        // Verificar que el usuario sea colegio
+        if (!$request->user()->isColegio()) {
+            abort(403, 'Acceso denegado.');
+        }
+
+        $request->validate([
+            'email' => 'required|email|unique:users,email|unique:invitations,email',
+            'role_id' => 'required|exists:roles,id',
+        ]);
+
+        // Obtener el rol para generar el nombre de usuario
+        $role = Role::find($request->role_id);
+        
+        // Generar nombre de usuario automáticamente
+        $username = $this->generateUsername($role->name);
+
+        // Crear la invitación
+        $invitation = Invitation::create([
+            'email' => $request->email,
+            'name' => $username, // Usar el username generado
+            'role_id' => $request->role_id,
+            'token' => Invitation::generateToken(),
+            'expires_at' => now()->addDays(7), // Expira en 7 días
+            'invited_by' => $request->user()->id,
+            'status' => 'pending',
+        ]);
+
+        // Enviar email de invitación
+        $this->sendInvitationEmail($invitation);
+
+        return redirect()->back()->with('success', 'Invitación enviada correctamente.');
+    }
+
+    /**
+     * Accept invitation and create user account.
+     */
+    public function acceptInvitation(Request $request, $token)
+    {
+        $invitation = Invitation::where('token', $token)
+            ->where('status', 'pending')
+            ->where('expires_at', '>', now())
+            ->firstOrFail();
+
+        // Generar contraseña temporal
+        $password = Str::random(8);
+
+        // Crear el usuario con el username generado
+        $user = User::create([
+            'name' => $invitation->name, // Usar el username generado
+            'email' => $invitation->email,
+            'password' => Hash::make($password),
+            'role_id' => $invitation->role_id,
+            'email_verified_at' => now(),
+        ]);
+
+        // Marcar invitación como aceptada
+        $invitation->markAsAccepted();
+
+        // Enviar email con credenciales
+        $this->sendCredentialsEmail($user, $password);
+
+        return redirect()->route('login')->with('success', 'Cuenta creada exitosamente. Revisa tu email para las credenciales.');
+    }
+
+    /**
+     * Generate username based on role.
+     */
+    private function generateUsername(string $roleName): string
+    {
+        $prefix = match($roleName) {
+            'profesor' => 'profesor',
+            'padre' => 'padre',
+            'estudiante' => 'estudiante',
+            'suplidor' => 'suplidor',
+            default => 'usuario'
+        };
+
+        // Buscar el siguiente número disponible
+        $counter = 1;
+        do {
+            $username = $prefix . str_pad($counter, 2, '0', STR_PAD_LEFT);
+            $exists = User::where('name', $username)->exists();
+            $counter++;
+        } while ($exists);
+
+        return $username;
+    }
+
+    /**
+     * Send invitation email.
+     */
+    private function sendInvitationEmail(Invitation $invitation)
+    {
+        try {
+            Mail::to($invitation->email)->send(new InvitationMail($invitation));
+            
+            \Log::info('Invitation email sent successfully', [
+                'email' => $invitation->email,
+                'token' => $invitation->token,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to send invitation email', [
+                'email' => $invitation->email,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Send credentials email.
+     */
+    private function sendCredentialsEmail(User $user, string $password)
+    {
+        try {
+            Mail::to($user->email)->send(new CredentialsMail($user, $password));
+            
+            \Log::info('Credentials email sent successfully', [
+                'email' => $user->email,
+                'user_id' => $user->id,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to send credentials email', [
+                'email' => $user->email,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Delete invitation.
+     */
+    public function deleteInvitation(Invitation $invitation)
+    {
+        // Verificar que el usuario sea colegio
+        if (!auth()->user()->isColegio()) {
+            abort(403, 'Acceso denegado.');
+        }
+
+        $invitation->delete();
+
+        return redirect()->back()->with('success', 'Invitación eliminada correctamente.');
+    }
+}

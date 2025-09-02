@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserManagementController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -8,15 +10,29 @@ use Inertia\Inertia;
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
+        'canRegister' => false, // Deshabilitar registro público
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
+
+// Rutas para gestión de usuarios (solo colegios)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/user-management', [UserManagementController::class, 'index'])
+        ->name('user-management.index');
+    Route::post('/user-management/invite', [UserManagementController::class, 'sendInvitation'])
+        ->name('user-management.invite');
+    Route::delete('/user-management/invitation/{invitation}', [UserManagementController::class, 'deleteInvitation'])
+        ->name('user-management.delete-invitation');
+});
+
+// Ruta para aceptar invitaciones (pública)
+Route::get('/invitation/{token}', [UserManagementController::class, 'acceptInvitation'])
+    ->name('invitation.accept');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -24,4 +40,5 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// Habilitar solo las rutas de autenticación necesarias (login, logout, etc.)
 require __DIR__.'/auth.php';

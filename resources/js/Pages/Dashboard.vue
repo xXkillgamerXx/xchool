@@ -1,6 +1,12 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
+import { Head, Link } from "@inertiajs/vue3";
+
+defineProps({
+    user: Object,
+    stats: Object,
+    recent_activities: Array,
+});
 </script>
 
 <template>
@@ -8,20 +14,57 @@ import { Head } from '@inertiajs/vue3';
 
     <AuthenticatedLayout>
         <template #header>
-            <h2
-                class="text-xl font-semibold leading-tight text-gray-800"
-            >
-                Dashboard
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                Dashboard -
+                {{ user.role.charAt(0).toUpperCase() + user.role.slice(1) }}
             </h2>
         </template>
 
         <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <!-- Enlace a gestión de usuarios para colegios -->
                 <div
-                    class="overflow-hidden bg-white shadow-sm sm:rounded-lg"
+                    v-if="user.role === 'colegio'"
+                    class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6"
+                >
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-medium text-blue-900">
+                                Gestión de Usuarios
+                            </h3>
+                            <p class="text-blue-700">
+                                Invita profesores y padres a la plataforma
+                            </p>
+                        </div>
+                        <Link
+                            :href="route('user-management.index')"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                        >
+                            Gestionar Usuarios
+                        </Link>
+                    </div>
+                </div>
+
+                <!-- Información del usuario -->
+                <div
+                    class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6"
                 >
                     <div class="p-6 text-gray-900">
-                        You're logged in!
+                        <h3 class="text-lg font-semibold mb-4">
+                            Bienvenido, {{ user.name }}
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-600">Email:</p>
+                                <p class="font-medium">{{ user.email }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Rol:</p>
+                                <p class="font-medium capitalize">
+                                    {{ user.role }}
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

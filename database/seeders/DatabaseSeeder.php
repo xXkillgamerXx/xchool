@@ -3,8 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Role;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,16 +14,22 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
-
-        // Usar el seeder personalizado
+        // Llamar a los seeders en orden
         $this->call([
+            RoleSeeder::class,
             UserSeeder::class,
         ]);
+
+        // Crear usuario de prueba adicional si es necesario
+        $estudianteRole = Role::where('name', 'estudiante')->first();
+        if ($estudianteRole) {
+            User::create([
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+                'password' => Hash::make('password'),
+                'role_id' => $estudianteRole->id,
+                'email_verified_at' => now(),
+            ]);
+        }
     }
 }
