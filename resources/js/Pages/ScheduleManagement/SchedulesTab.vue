@@ -283,6 +283,7 @@
 
 <script setup>
 import { ref, reactive } from "vue";
+import { router } from "@inertiajs/vue3";
 
 // Props
 const props = defineProps({

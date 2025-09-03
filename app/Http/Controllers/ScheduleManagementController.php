@@ -18,27 +18,65 @@ class ScheduleManagementController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware(function ($request, $next) {
-            if (!$request->user()->hasRole('colegio')) {
-                abort(403, 'Acceso denegado. Solo usuarios con rol Colegio pueden acceder.');
-            }
-            return $next($request);
-        });
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $grades = Grade::withCount('students')->active()->get();
-        $courses = Course::withCount('teachers')->active()->get();
-        $teachers = User::whereHas('role', function($query) {
-            $query->where('name', 'profesor');
-        })->get(['id', 'first_name', 'last_name', 'name']);
+        $user = $request->user();
+        
+        // Si es colegio, ve todo
+        if ($user->hasRole('colegio')) {
+            $grades = Grade::withCount('students')->active()->get();
+            $courses = Course::withCount('teachers')->active()->get();
+            $teachers = User::whereHas('role', function($query) {
+                $query->where('name', 'profesor');
+            })->get(['id', 'first_name', 'last_name', 'name']);
 
-        return Inertia::render('ScheduleManagement/Index', [
-            'grades' => $grades,
-            'courses' => $courses,
-            'teachers' => $teachers,
-        ]);
+            return Inertia::render('ScheduleManagement/Index', [
+                'grades' => $grades,
+                'courses' => $courses,
+                'teachers' => $teachers,
+                'userRole' => 'colegio',
+            ]);
+        }
+        
+        // Si es profesor, ve solo sus horarios
+        if ($user->hasRole('profesor')) {
+            $mySchedules = $user->teachingSchedules()
+                ->with(['grade', 'course'])
+                ->active()
+                ->orderBy('day')
+                ->orderBy('start_time')
+                ->get()
+                ->groupBy('day');
+
+            $myGrades = $user->teachingSchedules()
+                ->with('grade')
+                ->active()
+                ->get()
+                ->pluck('grade')
+                ->unique('id')
+                ->values();
+
+            $myCourses = $user->teachingSchedules()
+                ->with('course')
+                ->active()
+                ->get()
+                ->pluck('course')
+                ->unique('id')
+                ->values();
+
+            return Inertia::render('ScheduleManagement/TeacherView', [
+                'mySchedules' => $mySchedules,
+                'myGrades' => $myGrades,
+                'myCourses' => $myCourses,
+                'userRole' => 'profesor',
+                'teacher' => $user,
+            ]);
+        }
+
+        // Otros roles no tienen acceso
+        abort(403, 'No tienes permisos para acceder a esta sección.');
     }
 
     // Gestión de Grados

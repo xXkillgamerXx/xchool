@@ -42,7 +42,11 @@ class DashboardController extends Controller
                 'full_name' => $user->full_name,
                 'display_name' => $user->display_name,
                 'email' => $user->email,
-                'role' => $user->role->name,
+                'role' => [
+                    'id' => $user->role->id,
+                    'name' => $user->role->name,
+                    'display_name' => $user->role->display_name,
+                ],
                 'role_display' => $user->role->display_name,
             ],
         ];

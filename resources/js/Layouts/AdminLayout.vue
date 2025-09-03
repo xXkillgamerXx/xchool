@@ -77,8 +77,9 @@
                         Dashboard
                     </Link>
 
-                    <!-- Gestión de Usuarios -->
+                    <!-- Gestión de Usuarios (Solo Colegio) -->
                     <Link
+                        v-if="user.role && user.role.name === 'colegio'"
                         :href="route('user-management.index')"
                         :class="[
                             'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
@@ -103,8 +104,9 @@
                         Gestión de Usuarios
                     </Link>
 
-                    <!-- Gestión de Estudiantes -->
+                    <!-- Gestión de Estudiantes (Solo Colegio) -->
                     <Link
+                        v-if="user.role && user.role.name === 'colegio'"
                         :href="route('students.index')"
                         :class="[
                             'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
@@ -129,8 +131,9 @@
                         Gestión de Estudiantes
                     </Link>
 
-                    <!-- Gestión de Horarios -->
+                    <!-- Gestión de Horarios (Solo Colegio) -->
                     <Link
+                        v-if="user.role && user.role.name === 'colegio'"
                         :href="route('schedule-management.index')"
                         :class="[
                             'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
@@ -155,8 +158,36 @@
                         Gestión de Horarios
                     </Link>
 
-                    <!-- Historial de Actividades -->
+                    <!-- Mis Horarios (Solo Profesores) -->
                     <Link
+                        v-if="user.role && user.role.name === 'profesor'"
+                        :href="route('my-schedules.index')"
+                        :class="[
+                            'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                            route().current('my-schedules.*')
+                                ? 'bg-indigo-100 text-indigo-700'
+                                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900',
+                        ]"
+                    >
+                        <svg
+                            class="w-5 h-5 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            ></path>
+                        </svg>
+                        Mis Horarios
+                    </Link>
+
+                    <!-- Historial de Actividades (Solo Colegio) -->
+                    <Link
+                        v-if="user.role && user.role.name === 'colegio'"
                         :href="route('activity-log.index')"
                         :class="[
                             'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
@@ -306,7 +337,7 @@ const props = defineProps({
 });
 
 // Estado reactivo
-const sidebarOpen = ref(false);
+const sidebarOpen = ref(true); // Cambiar a true por defecto
 const isFullscreen = ref(false);
 const isLargeScreen = ref(false);
 
@@ -339,8 +370,11 @@ const checkScreenSize = () => {
 const handleResize = () => {
     checkScreenSize();
     // Si es pantalla grande o está en modo pantalla completa, mantener sidebar abierto
+    // Si es pantalla pequeña, ocultar sidebar
     if (isLargeScreen.value || isFullscreen.value) {
         sidebarOpen.value = true;
+    } else {
+        sidebarOpen.value = false;
     }
 };
 
@@ -359,7 +393,11 @@ onMounted(() => {
     checkScreenSize();
 
     // Configurar sidebar inicial basado en tamaño de pantalla
-    if (isLargeScreen.value || isFullscreen.value) {
+    // En móviles (pantalla pequeña), ocultar sidebar por defecto
+    // En desktop (pantalla grande), mostrar sidebar por defecto
+    if (!isLargeScreen.value && !isFullscreen.value) {
+        sidebarOpen.value = false;
+    } else {
         sidebarOpen.value = true;
     }
 

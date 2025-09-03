@@ -155,52 +155,6 @@ const props = defineProps({
                     </div>
                 </div>
             </div>
-
-            <!-- Actividad Reciente -->
-            <div v-if="recent_activities" class="bg-white shadow rounded-lg">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900">
-                        Actividad Reciente
-                    </h3>
-                </div>
-                <div class="p-6">
-                    <div class="space-y-4">
-                        <div
-                            v-for="activity in recent_activities"
-                            :key="activity.id"
-                            class="flex items-start space-x-3"
-                        >
-                            <div class="flex-shrink-0">
-                                <div
-                                    class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center"
-                                >
-                                    <svg
-                                        class="w-4 h-4 text-indigo-600"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                        ></path>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm text-gray-900">
-                                    {{ activity.description }}
-                                </p>
-                                <p class="text-xs text-gray-500">
-                                    {{ activity.time }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </AdminLayout>
 </template>

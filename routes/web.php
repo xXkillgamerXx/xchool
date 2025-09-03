@@ -25,7 +25,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->name('dashboard');
 
 // Rutas para gestión de usuarios (solo colegios)
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'role:colegio'])->group(function () {
     Route::get('/user-management', [UserManagementController::class, 'index'])
         ->name('user-management.index');
     Route::post('/user-management/invite', [UserManagementController::class, 'sendInvitation'])
@@ -47,31 +47,62 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Rutas de gestión de estudiantes (solo colegios)
-    Route::resource('students', StudentManagementController::class)->except(['show']);
-    Route::get('/students/search-parents', [StudentManagementController::class, 'searchParents'])->name('students.search-parents');
+    Route::middleware('role:colegio')->group(function () {
+        Route::resource('students', StudentManagementController::class)->except(['show']);
+        Route::get('/students/search-parents', [StudentManagementController::class, 'searchParents'])->name('students.search-parents');
+    });
 
     // Rutas del historial de actividades (solo colegios)
-    Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
-    Route::get('/activity-log/{model_type}/{model_id}', [ActivityLogController::class, 'forModel'])->name('activity-log.model');
+    Route::middleware('role:colegio')->group(function () {
+        Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
+        Route::get('/activity-log/{model_type}/{model_id}', [ActivityLogController::class, 'forModel'])->name('activity-log.model');
+    });
 
-    // Rutas de gestión de horarios (solo colegios)
-    Route::get('/schedule-management', [ScheduleManagementController::class, 'index'])->name('schedule-management.index');
-    Route::post('/schedule-management/grades', [ScheduleManagementController::class, 'storeGrade'])->name('schedule-management.grades.store');
-    Route::put('/schedule-management/grades/{grade}', [ScheduleManagementController::class, 'updateGrade'])->name('schedule-management.grades.update');
-    Route::delete('/schedule-management/grades/{grade}', [ScheduleManagementController::class, 'destroyGrade'])->name('schedule-management.grades.destroy');
+    // Rutas de gestión de horarios - Separadas por rol
+    Route::get('/schedule-management', [ScheduleManagementController::class, 'index'])
+        ->middleware('role:colegio')
+        ->name('schedule-management.index');
     
-    Route::post('/schedule-management/courses', [ScheduleManagementController::class, 'storeCourse'])->name('schedule-management.courses.store');
-    Route::put('/schedule-management/courses/{course}', [ScheduleManagementController::class, 'updateCourse'])->name('schedule-management.courses.update');
-    Route::delete('/schedule-management/courses/{course}', [ScheduleManagementController::class, 'destroyCourse'])->name('schedule-management.courses.destroy');
+    Route::get('/my-schedules', [ScheduleManagementController::class, 'index'])
+        ->middleware('role:profesor')
+        ->name('my-schedules.index');
     
-    Route::post('/schedule-management/schedules', [ScheduleManagementController::class, 'storeSchedule'])->name('schedule-management.schedules.store');
-    Route::put('/schedule-management/schedules/{schedule}', [ScheduleManagementController::class, 'updateSchedule'])->name('schedule-management.schedules.update');
-    Route::delete('/schedule-management/schedules/{schedule}', [ScheduleManagementController::class, 'destroySchedule'])->name('schedule-management.schedules.destroy');
+    // Solo colegios pueden crear/editar/eliminar
+    Route::middleware('role:colegio')->group(function () {
+        Route::post('/schedule-management/grades', [ScheduleManagementController::class, 'storeGrade'])->name('schedule-management.grades.store');
+        Route::put('/schedule-management/grades/{grade}', [ScheduleManagementController::class, 'updateGrade'])->name('schedule-management.grades.update');
+        Route::delete('/schedule-management/grades/{grade}', [ScheduleManagementController::class, 'destroyGrade'])->name('schedule-management.grades.destroy');
+        
+        Route::post('/schedule-management/courses', [ScheduleManagementController::class, 'storeCourse'])->name('schedule-management.courses.store');
+        Route::put('/schedule-management/courses/{course}', [ScheduleManagementController::class, 'updateCourse'])->name('schedule-management.courses.update');
+        Route::delete('/schedule-management/courses/{course}', [ScheduleManagementController::class, 'destroyCourse'])->name('schedule-management.courses.destroy');
+        
+        Route::post('/schedule-management/schedules', [ScheduleManagementController::class, 'storeSchedule'])->name('schedule-management.schedules.store');
+        Route::put('/schedule-management/schedules/{schedule}', [ScheduleManagementController::class, 'updateSchedule'])->name('schedule-management.schedules.update');
+        Route::delete('/schedule-management/schedules/{schedule}', [ScheduleManagementController::class, 'destroySchedule'])->name('schedule-management.schedules.destroy');
+    });
     
-    // Rutas para obtener horarios
-    Route::get('/schedule-management/grades/{grade}/schedules', [ScheduleManagementController::class, 'getSchedulesByGrade'])->name('schedule-management.grades.schedules');
-    Route::get('/schedule-management/teachers/{teacher}/schedules', [ScheduleManagementController::class, 'getSchedulesByTeacher'])->name('schedule-management.teachers.schedules');
-    Route::get('/schedule-management/students/{student}/schedules', [ScheduleManagementController::class, 'getSchedulesByStudent'])->name('schedule-management.students.schedules');
+    // Rutas para obtener horarios (colegios y profesores)
+    Route::get('/schedule-management/grades/{grade}/schedules', [ScheduleManagementController::class, 'getSchedulesByGrade'])
+        ->middleware('role:colegio')
+        ->name('schedule-management.grades.schedules');
+    Route::get('/schedule-management/grades/{grade}/schedules', [ScheduleManagementController::class, 'getSchedulesByGrade'])
+        ->middleware('role:profesor')
+        ->name('schedule-management.grades.schedules');
+        
+    Route::get('/schedule-management/teachers/{teacher}/schedules', [ScheduleManagementController::class, 'getSchedulesByTeacher'])
+        ->middleware('role:colegio')
+        ->name('schedule-management.teachers.schedules');
+    Route::get('/schedule-management/teachers/{teacher}/schedules', [ScheduleManagementController::class, 'getSchedulesByTeacher'])
+        ->middleware('role:profesor')
+        ->name('schedule-management.teachers.schedules');
+        
+    Route::get('/schedule-management/students/{student}/schedules', [ScheduleManagementController::class, 'getSchedulesByStudent'])
+        ->middleware('role:colegio')
+        ->name('schedule-management.students.schedules');
+    Route::get('/schedule-management/students/{student}/schedules', [ScheduleManagementController::class, 'getSchedulesByStudent'])
+        ->middleware('role:profesor')
+        ->name('schedule-management.students.schedules');
 });
 
 // Habilitar solo las rutas de autenticación necesarias (login, logout, etc.)
