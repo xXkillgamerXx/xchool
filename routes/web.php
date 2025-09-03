@@ -109,6 +109,7 @@ Route::middleware('auth')->group(function () {
     // Rutas específicas para padres
     Route::middleware('role:padre')->group(function () {
         Route::get('/parent/child', [ScheduleManagementController::class, 'parentChild'])->name('parent.child');
+        Route::get('/parent/child/dashboard', [ScheduleManagementController::class, 'parentChildDashboard'])->name('parent.child.dashboard');
         Route::get('/parent/child/schedule', [ScheduleManagementController::class, 'parentChildSchedule'])->name('parent.child.schedule');
         Route::get('/parent/child/teachers', [ScheduleManagementController::class, 'parentChildTeachers'])->name('parent.child.teachers');
         Route::get('/parent/child/attendance', [ScheduleManagementController::class, 'parentChildAttendance'])->name('parent.child.attendance');

@@ -41,8 +41,8 @@ class Grade extends Model
     // Accessors
     public function getFullNameAttribute()
     {
-        if ($this->section) {
-            return $this->name . ' ' . $this->section;
+        if ($this->section && $this->section !== '') {
+            return $this->name . ' - ' . $this->section;
         }
         return $this->name;
     }

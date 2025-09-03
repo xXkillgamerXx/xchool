@@ -315,7 +315,12 @@ class ScheduleManagementController extends Controller
 
         return Inertia::render('Student/Schedule', [
             'schedules' => $schedules,
-            'grade' => $grade,
+            'grade' => $grade ? [
+                'id' => $grade->id,
+                'name' => $grade->name,
+                'section' => $grade->section,
+                'full_name' => $grade->full_name,
+            ] : null,
             'user' => $user
         ]);
     }
@@ -401,19 +406,310 @@ class ScheduleManagementController extends Controller
     // ==================== MÉTODOS PARA PADRES ====================
     
     /**
+     * Dashboard integrado del hijo del padre
+     */
+    public function parentChildDashboard(Request $request)
+    {
+        $user = $request->user();
+        $children = $user->students()->with('grade')->get();
+        
+        if ($children->isEmpty()) {
+            $message = "No tienes hijos asignados en el sistema.";
+            return Inertia::render('Parent/ChildDashboard', [
+                'schedules' => [],
+                'teachers' => [],
+                'attendance' => [],
+                'grades' => [],
+                'reports' => [],
+                'grade' => null,
+                'child' => null,
+                'children' => [],
+                'user' => $user,
+                'message' => $message
+            ]);
+        }
+        
+        // Si hay un parámetro child_id, mostrar ese hijo específico
+        $childId = $request->get('child_id');
+        if ($childId) {
+            $child = $children->find($childId);
+        } else {
+            // Por defecto, mostrar el primer hijo
+            $child = $children->first();
+        }
+        
+        if (!$child) {
+            $message = "Hijo no encontrado.";
+            return Inertia::render('Parent/ChildDashboard', [
+                'schedules' => [],
+                'teachers' => [],
+                'attendance' => [],
+                'grades' => [],
+                'reports' => [],
+                'grade' => null,
+                'child' => null,
+                'children' => $children->map(function($c) {
+                    return [
+                        'id' => $c->id,
+                        'name' => $c->name,
+                        'grade' => $c->grade ? [
+                            'id' => $c->grade->id,
+                            'name' => $c->grade->name,
+                            'section' => $c->grade->section,
+                            'full_name' => $c->grade->full_name,
+                        ] : null
+                    ];
+                }),
+                'user' => $user,
+                'message' => $message
+            ]);
+        }
+        
+        $grade = $child->grade;
+        
+        if (!$grade) {
+            $message = "Tu hijo no tiene un grado asignado.";
+            return Inertia::render('Parent/ChildDashboard', [
+                'schedules' => [],
+                'teachers' => [],
+                'attendance' => [],
+                'grades' => [],
+                'reports' => [],
+                'grade' => null,
+                'child' => $child,
+                'children' => $children->map(function($c) {
+                    return [
+                        'id' => $c->id,
+                        'name' => $c->name,
+                        'grade' => $c->grade ? [
+                            'id' => $c->grade->id,
+                            'name' => $c->grade->name,
+                            'section' => $c->grade->section,
+                            'full_name' => $c->grade->full_name,
+                        ] : null
+                    ];
+                }),
+                'user' => $user,
+                'message' => $message
+            ]);
+        }
+        
+        // Obtener horarios del hijo
+        $schedules = Schedule::where('grade_id', $grade->id)
+            ->with(['course', 'teacher'])
+            ->active()
+            ->get()
+            ->groupBy('day');
+        
+        // Convertir a formato legible
+        $schedulesData = [];
+        foreach ($schedules as $day => $daySchedules) {
+            $dayName = $this->getDayName($day);
+            $schedulesData[$dayName] = $daySchedules->map(function ($schedule) {
+                return [
+                    'id' => $schedule->id,
+                    'course' => [
+                        'id' => $schedule->course->id,
+                        'name' => $schedule->course->name,
+                    ],
+                    'teacher' => [
+                        'id' => $schedule->teacher->id,
+                        'name' => $schedule->teacher->name,
+                    ],
+                    'start_time' => $schedule->start_time,
+                    'end_time' => $schedule->end_time,
+                    'day' => $schedule->day,
+                ];
+            });
+        }
+        
+        // Obtener profesores del hijo
+        $schedulesForTeachers = Schedule::where('grade_id', $grade->id)
+            ->with(['course', 'teacher'])
+            ->active()
+            ->get();
+        
+        $teachersData = [];
+        foreach ($schedulesForTeachers as $schedule) {
+            $teacherId = $schedule->teacher->id;
+            
+            if (!isset($teachersData[$teacherId])) {
+                $teachersData[$teacherId] = [
+                    'teacher' => [
+                        'id' => $schedule->teacher->id,
+                        'name' => $schedule->teacher->name,
+                        'email' => $schedule->teacher->email,
+                    ],
+                    'courses' => [],
+                    'schedules' => [],
+                    'total_classes' => 0,
+                ];
+            }
+            
+            // Agregar curso si no existe
+            $courseExists = false;
+            foreach ($teachersData[$teacherId]['courses'] as $course) {
+                if ($course['id'] === $schedule->course->id) {
+                    $courseExists = true;
+                    break;
+                }
+            }
+            
+            if (!$courseExists) {
+                $teachersData[$teacherId]['courses'][] = [
+                    'id' => $schedule->course->id,
+                    'name' => $schedule->course->name,
+                ];
+            }
+            
+            // Agregar horario
+            $teachersData[$teacherId]['schedules'][] = [
+                'id' => $schedule->id,
+                'day' => $schedule->day,
+                'start_time' => $schedule->start_time,
+                'end_time' => $schedule->end_time,
+                'course' => [
+                    'id' => $schedule->course->id,
+                    'name' => $schedule->course->name,
+                ],
+            ];
+            
+            $teachersData[$teacherId]['total_classes']++;
+        }
+        
+        // Datos de ejemplo para asistencia
+        $attendanceData = [
+            'total_days' => 20,
+            'present_days' => 18,
+            'absent_days' => 2,
+            'attendance_percentage' => 90.0,
+            'recent_attendance' => [
+                ['date' => '2024-01-15', 'status' => 'present', 'course' => 'Matemáticas'],
+                ['date' => '2024-01-14', 'status' => 'present', 'course' => 'Lenguaje'],
+                ['date' => '2024-01-13', 'status' => 'absent', 'course' => 'Ciencias'],
+                ['date' => '2024-01-12', 'status' => 'present', 'course' => 'Historia'],
+                ['date' => '2024-01-11', 'status' => 'present', 'course' => 'Educación Física'],
+            ]
+        ];
+        
+        // Datos de ejemplo para calificaciones
+        $gradesData = [
+            'overall_average' => 85.5,
+            'courses' => [
+                [
+                    'course' => 'Matemáticas',
+                    'teacher' => 'Prof. García',
+                    'average' => 88.0,
+                    'grades' => [
+                        ['assignment' => 'Examen Parcial', 'grade' => 90, 'date' => '2024-01-10'],
+                        ['assignment' => 'Tarea 1', 'grade' => 85, 'date' => '2024-01-08'],
+                        ['assignment' => 'Proyecto', 'grade' => 89, 'date' => '2024-01-05'],
+                    ]
+                ],
+                [
+                    'course' => 'Lenguaje',
+                    'teacher' => 'Prof. López',
+                    'average' => 82.0,
+                    'grades' => [
+                        ['assignment' => 'Ensayo', 'grade' => 80, 'date' => '2024-01-12'],
+                        ['assignment' => 'Lectura', 'grade' => 85, 'date' => '2024-01-09'],
+                        ['assignment' => 'Gramática', 'grade' => 81, 'date' => '2024-01-06'],
+                    ]
+                ],
+                [
+                    'course' => 'Ciencias',
+                    'teacher' => 'Prof. Martínez',
+                    'average' => 87.0,
+                    'grades' => [
+                        ['assignment' => 'Laboratorio', 'grade' => 90, 'date' => '2024-01-11'],
+                        ['assignment' => 'Examen', 'grade' => 85, 'date' => '2024-01-07'],
+                        ['assignment' => 'Proyecto', 'grade' => 86, 'date' => '2024-01-04'],
+                    ]
+                ],
+            ]
+        ];
+        
+        // Datos de ejemplo para reportes
+        $reportsData = [
+            'academic_progress' => [
+                'overall_performance' => 'Bueno',
+                'strengths' => ['Matemáticas', 'Participación en clase'],
+                'areas_for_improvement' => ['Lectura comprensiva', 'Organización'],
+                'recommendations' => 'Continuar con el buen desempeño en matemáticas y trabajar en mejorar la comprensión lectora.'
+            ],
+            'behavioral_notes' => [
+                ['date' => '2024-01-15', 'note' => 'Excelente participación en clase de ciencias', 'type' => 'positive'],
+                ['date' => '2024-01-12', 'note' => 'Ayudó a un compañero con la tarea de matemáticas', 'type' => 'positive'],
+                ['date' => '2024-01-10', 'note' => 'Necesita mejorar la puntualidad en las entregas', 'type' => 'improvement'],
+            ],
+            'upcoming_events' => [
+                ['date' => '2024-01-20', 'event' => 'Examen de Matemáticas', 'type' => 'exam'],
+                ['date' => '2024-01-25', 'event' => 'Presentación de Proyecto de Ciencias', 'type' => 'presentation'],
+                ['date' => '2024-01-30', 'event' => 'Reunión de Padres', 'type' => 'meeting'],
+            ]
+        ];
+        
+        return Inertia::render('Parent/ChildDashboard', [
+            'schedules' => $schedulesData,
+            'teachers' => $teachersData,
+            'attendance' => $attendanceData,
+            'grades' => $gradesData,
+            'reports' => $reportsData,
+            'grade' => $grade ? [
+                'id' => $grade->id,
+                'name' => $grade->name,
+                'section' => $grade->section,
+                'full_name' => $grade->full_name,
+            ] : null,
+            'child' => $child,
+            'children' => $children->map(function($c) {
+                return [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'grade' => $c->grade ? [
+                        'id' => $c->grade->id,
+                        'name' => $c->grade->name,
+                        'section' => $c->grade->section,
+                        'full_name' => $c->grade->full_name,
+                    ] : null
+                ];
+            }),
+            'user' => $user
+        ]);
+    }
+
+    /**
      * Mostrar información del hijo del padre
      */
     public function parentChild(Request $request)
     {
         $user = $request->user();
+        $children = $user->students()->with('grade')->get();
         
-        // Obtener el primer hijo del padre
-        $child = $user->students()->first();
-        
-        if (!$child) {
-            $message = "No tienes un hijo asignado en el sistema.";
+        if ($children->isEmpty()) {
+            $message = "No tienes hijos asignados en el sistema.";
             return Inertia::render('Parent/Child', [
                 'child' => null,
+                'children' => [],
+                'user' => $user,
+                'message' => $message
+            ]);
+        }
+        
+        // Si hay un parámetro child_id, mostrar ese hijo específico
+        $childId = $request->get('child_id');
+        if ($childId) {
+            $child = $children->find($childId);
+        } else {
+            // Por defecto, mostrar el primer hijo
+            $child = $children->first();
+        }
+        
+        if (!$child) {
+            $message = "Hijo no encontrado.";
+            return Inertia::render('Parent/Child', [
+                'child' => null,
+                'children' => $children,
                 'user' => $user,
                 'message' => $message
             ]);
@@ -423,6 +719,18 @@ class ScheduleManagementController extends Controller
         
         return Inertia::render('Parent/Child', [
             'child' => $child,
+            'children' => $children->map(function($c) {
+                return [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'grade' => $c->grade ? [
+                        'id' => $c->grade->id,
+                        'name' => $c->grade->name,
+                        'section' => $c->grade->section,
+                        'full_name' => $c->grade->full_name,
+                    ] : null
+                ];
+            }),
             'grade' => $grade,
             'user' => $user
         ]);
@@ -434,13 +742,36 @@ class ScheduleManagementController extends Controller
     public function parentChildSchedule(Request $request)
     {
         $user = $request->user();
-        $child = $user->students()->first();
+        $children = $user->students()->with('grade')->get();
         
-        if (!$child) {
-            $message = "No tienes un hijo asignado en el sistema.";
+        if ($children->isEmpty()) {
+            $message = "No tienes hijos asignados en el sistema.";
             return Inertia::render('Parent/ChildSchedule', [
                 'schedules' => [],
                 'grade' => null,
+                'child' => null,
+                'children' => [],
+                'user' => $user,
+                'message' => $message
+            ]);
+        }
+        
+        // Si hay un parámetro child_id, mostrar ese hijo específico
+        $childId = $request->get('child_id');
+        if ($childId) {
+            $child = $children->find($childId);
+        } else {
+            // Por defecto, mostrar el primer hijo
+            $child = $children->first();
+        }
+        
+        if (!$child) {
+            $message = "Hijo no encontrado.";
+            return Inertia::render('Parent/ChildSchedule', [
+                'schedules' => [],
+                'grade' => null,
+                'child' => null,
+                'children' => $children,
                 'user' => $user,
                 'message' => $message
             ]);
@@ -453,6 +784,19 @@ class ScheduleManagementController extends Controller
             return Inertia::render('Parent/ChildSchedule', [
                 'schedules' => [],
                 'grade' => null,
+                'child' => $child,
+                'children' => $children->map(function($c) {
+                    return [
+                        'id' => $c->id,
+                        'name' => $c->name,
+                        'grade' => $c->grade ? [
+                            'id' => $c->grade->id,
+                            'name' => $c->grade->name,
+                            'section' => $c->grade->section,
+                            'full_name' => $c->grade->full_name,
+                        ] : null
+                    ];
+                }),
                 'user' => $user,
                 'message' => $message
             ]);
@@ -489,8 +833,25 @@ class ScheduleManagementController extends Controller
         
         return Inertia::render('Parent/ChildSchedule', [
             'schedules' => $schedulesData,
-            'grade' => $grade,
+            'grade' => $grade ? [
+                'id' => $grade->id,
+                'name' => $grade->name,
+                'section' => $grade->section,
+                'full_name' => $grade->full_name,
+            ] : null,
             'child' => $child,
+            'children' => $children->map(function($c) {
+                return [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'grade' => $c->grade ? [
+                        'id' => $c->grade->id,
+                        'name' => $c->grade->name,
+                        'section' => $c->grade->section,
+                        'full_name' => $c->grade->full_name,
+                    ] : null
+                ];
+            }),
             'user' => $user
         ]);
     }
@@ -501,13 +862,47 @@ class ScheduleManagementController extends Controller
     public function parentChildTeachers(Request $request)
     {
         $user = $request->user();
-        $child = $user->students()->first();
+        $children = $user->students()->with('grade')->get();
         
-        if (!$child) {
-            $message = "No tienes un hijo asignado en el sistema.";
+        if ($children->isEmpty()) {
+            $message = "No tienes hijos asignados en el sistema.";
             return Inertia::render('Parent/ChildTeachers', [
                 'teachers' => [],
                 'grade' => null,
+                'child' => null,
+                'children' => [],
+                'user' => $user,
+                'message' => $message
+            ]);
+        }
+        
+        // Si hay un parámetro child_id, mostrar ese hijo específico
+        $childId = $request->get('child_id');
+        if ($childId) {
+            $child = $children->find($childId);
+        } else {
+            // Por defecto, mostrar el primer hijo
+            $child = $children->first();
+        }
+        
+        if (!$child) {
+            $message = "Hijo no encontrado.";
+            return Inertia::render('Parent/ChildTeachers', [
+                'teachers' => [],
+                'grade' => null,
+                'child' => null,
+                'children' => $children->map(function($c) {
+                    return [
+                        'id' => $c->id,
+                        'name' => $c->name,
+                        'grade' => $c->grade ? [
+                            'id' => $c->grade->id,
+                            'name' => $c->grade->name,
+                            'section' => $c->grade->section,
+                            'full_name' => $c->grade->full_name,
+                        ] : null
+                    ];
+                }),
                 'user' => $user,
                 'message' => $message
             ]);
@@ -583,6 +978,18 @@ class ScheduleManagementController extends Controller
             'teachers' => $teachersData,
             'grade' => $grade,
             'child' => $child,
+            'children' => $children->map(function($c) {
+                return [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'grade' => $c->grade ? [
+                        'id' => $c->grade->id,
+                        'name' => $c->grade->name,
+                        'section' => $c->grade->section,
+                        'full_name' => $c->grade->full_name,
+                    ] : null
+                ];
+            }),
             'user' => $user
         ]);
     }
@@ -593,13 +1000,47 @@ class ScheduleManagementController extends Controller
     public function parentChildAttendance(Request $request)
     {
         $user = $request->user();
-        $child = $user->students()->first();
+        $children = $user->students()->with('grade')->get();
         
-        if (!$child) {
-            $message = "No tienes un hijo asignado en el sistema.";
+        if ($children->isEmpty()) {
+            $message = "No tienes hijos asignados en el sistema.";
             return Inertia::render('Parent/ChildAttendance', [
                 'attendance' => [],
                 'grade' => null,
+                'child' => null,
+                'children' => [],
+                'user' => $user,
+                'message' => $message
+            ]);
+        }
+        
+        // Si hay un parámetro child_id, mostrar ese hijo específico
+        $childId = $request->get('child_id');
+        if ($childId) {
+            $child = $children->find($childId);
+        } else {
+            // Por defecto, mostrar el primer hijo
+            $child = $children->first();
+        }
+        
+        if (!$child) {
+            $message = "Hijo no encontrado.";
+            return Inertia::render('Parent/ChildAttendance', [
+                'attendance' => [],
+                'grade' => null,
+                'child' => null,
+                'children' => $children->map(function($c) {
+                    return [
+                        'id' => $c->id,
+                        'name' => $c->name,
+                        'grade' => $c->grade ? [
+                            'id' => $c->grade->id,
+                            'name' => $c->grade->name,
+                            'section' => $c->grade->section,
+                            'full_name' => $c->grade->full_name,
+                        ] : null
+                    ];
+                }),
                 'user' => $user,
                 'message' => $message
             ]);
@@ -626,6 +1067,18 @@ class ScheduleManagementController extends Controller
             'attendance' => $attendanceData,
             'grade' => $grade,
             'child' => $child,
+            'children' => $children->map(function($c) {
+                return [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'grade' => $c->grade ? [
+                        'id' => $c->grade->id,
+                        'name' => $c->grade->name,
+                        'section' => $c->grade->section,
+                        'full_name' => $c->grade->full_name,
+                    ] : null
+                ];
+            }),
             'user' => $user
         ]);
     }
@@ -636,13 +1089,47 @@ class ScheduleManagementController extends Controller
     public function parentChildGrades(Request $request)
     {
         $user = $request->user();
-        $child = $user->students()->first();
+        $children = $user->students()->with('grade')->get();
         
-        if (!$child) {
-            $message = "No tienes un hijo asignado en el sistema.";
+        if ($children->isEmpty()) {
+            $message = "No tienes hijos asignados en el sistema.";
             return Inertia::render('Parent/ChildGrades', [
                 'grades' => [],
                 'grade' => null,
+                'child' => null,
+                'children' => [],
+                'user' => $user,
+                'message' => $message
+            ]);
+        }
+        
+        // Si hay un parámetro child_id, mostrar ese hijo específico
+        $childId = $request->get('child_id');
+        if ($childId) {
+            $child = $children->find($childId);
+        } else {
+            // Por defecto, mostrar el primer hijo
+            $child = $children->first();
+        }
+        
+        if (!$child) {
+            $message = "Hijo no encontrado.";
+            return Inertia::render('Parent/ChildGrades', [
+                'grades' => [],
+                'grade' => null,
+                'child' => null,
+                'children' => $children->map(function($c) {
+                    return [
+                        'id' => $c->id,
+                        'name' => $c->name,
+                        'grade' => $c->grade ? [
+                            'id' => $c->grade->id,
+                            'name' => $c->grade->name,
+                            'section' => $c->grade->section,
+                            'full_name' => $c->grade->full_name,
+                        ] : null
+                    ];
+                }),
                 'user' => $user,
                 'message' => $message
             ]);
@@ -691,6 +1178,18 @@ class ScheduleManagementController extends Controller
             'grades' => $gradesData,
             'grade' => $grade,
             'child' => $child,
+            'children' => $children->map(function($c) {
+                return [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'grade' => $c->grade ? [
+                        'id' => $c->grade->id,
+                        'name' => $c->grade->name,
+                        'section' => $c->grade->section,
+                        'full_name' => $c->grade->full_name,
+                    ] : null
+                ];
+            }),
             'user' => $user
         ]);
     }
@@ -701,13 +1200,47 @@ class ScheduleManagementController extends Controller
     public function parentChildReports(Request $request)
     {
         $user = $request->user();
-        $child = $user->students()->first();
+        $children = $user->students()->with('grade')->get();
         
-        if (!$child) {
-            $message = "No tienes un hijo asignado en el sistema.";
+        if ($children->isEmpty()) {
+            $message = "No tienes hijos asignados en el sistema.";
             return Inertia::render('Parent/ChildReports', [
                 'reports' => [],
                 'grade' => null,
+                'child' => null,
+                'children' => [],
+                'user' => $user,
+                'message' => $message
+            ]);
+        }
+        
+        // Si hay un parámetro child_id, mostrar ese hijo específico
+        $childId = $request->get('child_id');
+        if ($childId) {
+            $child = $children->find($childId);
+        } else {
+            // Por defecto, mostrar el primer hijo
+            $child = $children->first();
+        }
+        
+        if (!$child) {
+            $message = "Hijo no encontrado.";
+            return Inertia::render('Parent/ChildReports', [
+                'reports' => [],
+                'grade' => null,
+                'child' => null,
+                'children' => $children->map(function($c) {
+                    return [
+                        'id' => $c->id,
+                        'name' => $c->name,
+                        'grade' => $c->grade ? [
+                            'id' => $c->grade->id,
+                            'name' => $c->grade->name,
+                            'section' => $c->grade->section,
+                            'full_name' => $c->grade->full_name,
+                        ] : null
+                    ];
+                }),
                 'user' => $user,
                 'message' => $message
             ]);
@@ -739,6 +1272,18 @@ class ScheduleManagementController extends Controller
             'reports' => $reportsData,
             'grade' => $grade,
             'child' => $child,
+            'children' => $children->map(function($c) {
+                return [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'grade' => $c->grade ? [
+                        'id' => $c->grade->id,
+                        'name' => $c->grade->name,
+                        'section' => $c->grade->section,
+                        'full_name' => $c->grade->full_name,
+                    ] : null
+                ];
+            }),
             'user' => $user
         ]);
     }

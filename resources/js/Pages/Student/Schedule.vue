@@ -8,7 +8,7 @@
                     <p class="mt-2 text-gray-600">
                         {{
                             grade
-                                ? `Grado: ${grade.name}`
+                                ? `Grado: ${grade.full_name || grade.name}`
                                 : "No tienes un grado asignado"
                         }}
                     </p>
