@@ -1,61 +1,72 @@
 <template>
-    <AuthenticatedLayout>
-        <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Gestión de Estudiantes
-            </h2>
-        </template>
+    <Head title="Gestión de Estudiantes" />
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                <!-- Botón para crear nuevo estudiante -->
-                <div class="flex justify-between items-center">
+    <AdminLayout :user="$page.props.auth.user">
+        <div class="space-y-6">
+            <!-- Header -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h1 class="text-2xl font-bold text-gray-900">
+                    Gestión de Estudiantes
+                </h1>
+                <p class="mt-2 text-gray-600">
+                    Crea y administra estudiantes del sistema
+                </p>
+            </div>
+
+            <!-- Formulario para crear estudiantes -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <div class="flex items-center justify-between mb-6">
                     <h3 class="text-lg font-medium text-gray-900">
-                        Estudiantes Registrados
+                        Crear Nuevo Estudiante
                     </h3>
                     <button
-                        @click="showCreateForm = true"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                        @click="showCreateForm = !showCreateForm"
+                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
                     >
-                        + Crear Estudiante
+                        {{ showCreateForm ? "Cancelar" : "Crear Estudiante" }}
                     </button>
                 </div>
 
-                <!-- Formulario para crear estudiante -->
-                <div
-                    v-if="showCreateForm"
-                    class="bg-white p-6 rounded-lg shadow"
-                >
-                    <h4 class="text-lg font-medium text-gray-900 mb-4">
-                        Crear Nuevo Estudiante
-                    </h4>
-                    <form @submit.prevent="createStudent" class="space-y-4">
+                <!-- Formulario de creación -->
+                <div v-if="showCreateForm" class="space-y-4">
+                    <form @submit.prevent="submitForm" class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label
                                     class="block text-sm font-medium text-gray-700"
+                                    >Nombre</label
                                 >
-                                    Nombre
-                                </label>
                                 <input
-                                    v-model="studentForm.first_name"
+                                    v-model="form.first_name"
                                     type="text"
                                     required
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                                 />
+                                <div
+                                    v-if="form.errors.first_name"
+                                    class="text-red-500 text-sm mt-1"
+                                >
+                                    {{ form.errors.first_name }}
+                                </div>
                             </div>
+
                             <div>
                                 <label
                                     class="block text-sm font-medium text-gray-700"
+                                    >Apellido</label
                                 >
-                                    Apellido
-                                </label>
                                 <input
-                                    v-model="studentForm.last_name"
+                                    v-model="form.last_name"
                                     type="text"
                                     required
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                                 />
+                                <div
+                                    v-if="form.errors.last_name"
+                                    class="text-red-500 text-sm mt-1"
+                                >
+                                    {{ form.errors.last_name }}
+                                </div>
                             </div>
                         </div>
 
@@ -63,89 +74,49 @@
                             <div>
                                 <label
                                     class="block text-sm font-medium text-gray-700"
+                                    >Email</label
                                 >
-                                    Email
-                                </label>
                                 <input
-                                    v-model="studentForm.email"
+                                    v-model="form.email"
                                     type="email"
                                     required
+                                    @blur="validateEmail"
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                                     :class="{ 'border-red-500': emailError }"
                                 />
-                                <p
+                                <div
                                     v-if="emailError"
-                                    class="mt-1 text-sm text-red-600"
+                                    class="text-red-500 text-sm mt-1"
                                 >
                                     {{ emailError }}
-                                </p>
+                                </div>
+                                <div
+                                    v-if="form.errors.email"
+                                    class="text-red-500 text-sm mt-1"
+                                >
+                                    {{ form.errors.email }}
+                                </div>
                             </div>
+
                             <div>
                                 <label
                                     class="block text-sm font-medium text-gray-700"
+                                    >Padre</label
                                 >
-                                    Padre
-                                </label>
-                                <div class="mt-1">
-                                    <!-- Padre seleccionado -->
-                                    <div
-                                        v-if="selectedParent"
-                                        class="flex items-center space-x-3 p-3 bg-gray-50 rounded-md border"
-                                    >
-                                        <div class="flex-shrink-0">
-                                            <div
-                                                class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-lg"
-                                            >
-                                                {{
-                                                    selectedParent.avatar_initial
-                                                }}
-                                            </div>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p
-                                                class="text-sm font-medium text-gray-900"
-                                            >
-                                                {{ selectedParent.first_name }}
-                                                {{ selectedParent.last_name }}
-                                            </p>
-                                            <p class="text-sm text-gray-500">
-                                                {{ selectedParent.name }} •
-                                                {{ selectedParent.email }}
-                                            </p>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            @click="clearSelectedParent"
-                                            class="text-gray-400 hover:text-gray-600"
-                                        >
-                                            <svg
-                                                class="w-5 h-5"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    stroke-linecap="round"
-                                                    stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M6 18L18 6M6 6l12 12"
-                                                ></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-
-                                    <!-- Botón para seleccionar padre -->
-                                    <button
-                                        v-else
-                                        type="button"
+                                <div class="relative">
+                                    <input
+                                        v-model="selectedParent.display_name"
+                                        type="text"
+                                        readonly
+                                        placeholder="Selecciona un padre"
                                         @click="showParentModal = true"
-                                        class="w-full text-left p-3 border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-50 cursor-pointer"
+                                    />
+                                    <div
+                                        class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
                                     >
-                                        <span class="text-gray-500"
-                                            >Selecciona un padre</span
-                                        >
                                         <svg
-                                            class="w-5 h-5 text-gray-400 float-right"
+                                            class="h-5 w-5 text-gray-400"
                                             fill="none"
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
@@ -157,7 +128,13 @@
                                                 d="M19 9l-7 7-7-7"
                                             ></path>
                                         </svg>
-                                    </button>
+                                    </div>
+                                </div>
+                                <div
+                                    v-if="form.errors.parent_id"
+                                    class="text-red-500 text-sm mt-1"
+                                >
+                                    {{ form.errors.parent_id }}
                                 </div>
                             </div>
                         </div>
@@ -166,24 +143,372 @@
                             <div>
                                 <label
                                     class="block text-sm font-medium text-gray-700"
+                                    >Fecha de Nacimiento</label
                                 >
-                                    Fecha de Nacimiento
-                                </label>
                                 <input
-                                    v-model="studentForm.birth_date"
+                                    v-model="form.birth_date"
                                     type="date"
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                                 />
+                                <div
+                                    v-if="form.errors.birth_date"
+                                    class="text-red-500 text-sm mt-1"
+                                >
+                                    {{ form.errors.birth_date }}
+                                </div>
                             </div>
+
                             <div>
                                 <label
                                     class="block text-sm font-medium text-gray-700"
+                                    >Género</label
                                 >
-                                    Género
-                                </label>
                                 <select
-                                    v-model="studentForm.gender"
+                                    v-model="form.gender"
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                >
+                                    <option value="">Selecciona género</option>
+                                    <option value="masculino">Masculino</option>
+                                    <option value="femenino">Femenino</option>
+                                    <option value="otro">Otro</option>
+                                </select>
+                                <div
+                                    v-if="form.errors.gender"
+                                    class="text-red-500 text-sm mt-1"
+                                >
+                                    {{ form.errors.gender }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button
+                                type="submit"
+                                :disabled="form.processing"
+                                class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 transition-colors"
+                            >
+                                {{
+                                    form.processing
+                                        ? "Creando..."
+                                        : "Crear Estudiante"
+                                }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Lista de estudiantes -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">
+                        Estudiantes Registrados
+                    </h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                >
+                                    Estudiante
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                >
+                                    Email
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                >
+                                    Padre
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                >
+                                    Fecha de Nacimiento
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                >
+                                    Acciones
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr v-for="student in students" :key="student.id">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            <div
+                                                class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center"
+                                            >
+                                                <span
+                                                    class="text-sm font-medium text-indigo-600"
+                                                >
+                                                    {{
+                                                        getInitials(
+                                                            student.first_name,
+                                                            student.last_name
+                                                        )
+                                                    }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div
+                                                class="text-sm font-medium text-gray-900"
+                                            >
+                                                {{ student.first_name }}
+                                                {{ student.last_name }}
+                                            </div>
+                                            <div class="text-sm text-gray-500">
+                                                @{{ student.name }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td
+                                    class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                                >
+                                    {{ student.email }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div
+                                        v-if="student.parent"
+                                        class="flex items-center"
+                                    >
+                                        <div class="flex-shrink-0 h-8 w-8">
+                                            <div
+                                                class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center"
+                                            >
+                                                <span
+                                                    class="text-xs font-medium text-green-600"
+                                                >
+                                                    {{
+                                                        student.parent
+                                                            .avatar_initial
+                                                    }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="ml-3">
+                                            <div
+                                                class="text-sm font-medium text-gray-900"
+                                            >
+                                                {{
+                                                    student.parent.display_name
+                                                }}
+                                            </div>
+                                            <div class="text-sm text-gray-500">
+                                                @{{ student.parent.name }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span v-else class="text-gray-400"
+                                        >Sin asignar</span
+                                    >
+                                </td>
+                                <td
+                                    class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                                >
+                                    {{
+                                        student.birth_date
+                                            ? new Date(
+                                                  student.birth_date
+                                              ).toLocaleDateString()
+                                            : "N/A"
+                                    }}
+                                </td>
+                                <td
+                                    class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2"
+                                >
+                                    <button
+                                        @click="editStudent(student)"
+                                        class="text-indigo-600 hover:text-indigo-900 transition-colors"
+                                    >
+                                        Editar
+                                    </button>
+                                    <button
+                                        @click="confirmDeleteStudent(student)"
+                                        class="text-red-600 hover:text-red-900 transition-colors"
+                                    >
+                                        Eliminar
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de selección de padre -->
+        <div
+            v-if="showParentModal"
+            class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+        >
+            <div
+                class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+            >
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">
+                        Seleccionar Padre
+                    </h3>
+
+                    <!-- Búsqueda -->
+                    <div class="mb-4">
+                        <input
+                            v-model="parentSearch"
+                            type="text"
+                            placeholder="Buscar padre..."
+                            class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        />
+                    </div>
+
+                    <!-- Lista de padres -->
+                    <div class="max-h-60 overflow-y-auto space-y-2">
+                        <div
+                            v-for="parent in filteredParents"
+                            :key="parent.id"
+                            @click="selectParent(parent)"
+                            class="p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                        >
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-8 w-8">
+                                    <div
+                                        class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center"
+                                    >
+                                        <span
+                                            class="text-xs font-medium text-green-600"
+                                        >
+                                            {{ parent.avatar_initial }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="ml-3">
+                                    <div
+                                        class="text-sm font-medium text-gray-900"
+                                    >
+                                        {{ parent.display_name }}
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        @{{ parent.name }}
+                                    </div>
+                                    <div class="text-xs text-gray-400">
+                                        {{ parent.email }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end mt-4">
+                        <button
+                            @click="showParentModal = false"
+                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de edición de estudiante -->
+        <div
+            v-if="showEditStudentModal"
+            class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+        >
+            <div
+                class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+            >
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">
+                        Editar Estudiante
+                    </h3>
+
+                    <form @submit.prevent="updateStudent" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    class="block text-sm font-medium text-gray-700"
+                                    >Nombre</label
+                                >
+                                <input
+                                    v-model="editStudentForm.first_name"
+                                    type="text"
+                                    required
+                                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label
+                                    class="block text-sm font-medium text-gray-700"
+                                    >Apellido</label
+                                >
+                                <input
+                                    v-model="editStudentForm.last_name"
+                                    type="text"
+                                    required
+                                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label
+                                class="block text-sm font-medium text-gray-700"
+                                >Email</label
+                            >
+                            <input
+                                v-model="editStudentForm.email"
+                                type="email"
+                                required
+                                class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                        </div>
+
+                        <div>
+                            <label
+                                class="block text-sm font-medium text-gray-700"
+                                >Padre</label
+                            >
+                            <div class="relative">
+                                <input
+                                    v-model="selectedParent.display_name"
+                                    type="text"
+                                    readonly
+                                    placeholder="Selecciona un padre"
+                                    @click="showParentModal = true"
+                                    class="w-full border-gray-300 rounded-md shadow-sm bg-gray-50 cursor-pointer"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    class="block text-sm font-medium text-gray-700"
+                                    >Fecha de Nacimiento</label
+                                >
+                                <input
+                                    v-model="editStudentForm.birth_date"
+                                    type="date"
+                                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label
+                                    class="block text-sm font-medium text-gray-700"
+                                    >Género</label
+                                >
+                                <select
+                                    v-model="editStudentForm.gender"
+                                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
                                 >
                                     <option value="">Selecciona género</option>
                                     <option value="masculino">Masculino</option>
@@ -196,322 +521,79 @@
                         <div class="flex justify-end space-x-3">
                             <button
                                 type="button"
-                                @click="showCreateForm = false"
-                                class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm font-medium"
+                                @click="cancelEdit"
+                                class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm font-medium transition-colors"
                             >
                                 Cancelar
                             </button>
                             <button
                                 type="submit"
-                                :disabled="studentForm.processing"
-                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
+                                :disabled="editStudentForm.processing"
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50 transition-colors"
                             >
-                                <span v-if="studentForm.processing"
-                                    >Creando...</span
-                                >
-                                <span v-else>Crear Estudiante</span>
+                                {{
+                                    editStudentForm.processing
+                                        ? "Actualizando..."
+                                        : "Actualizar"
+                                }}
                             </button>
                         </div>
                     </form>
                 </div>
-
-                <!-- Tabla de estudiantes -->
-                <div class="bg-white shadow rounded-lg">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h3 class="text-lg font-medium text-gray-900">
-                            Lista de Estudiantes
-                        </h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                    >
-                                        Estudiante
-                                    </th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                    >
-                                        Padre Asignado
-                                    </th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                    >
-                                        Email
-                                    </th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                    >
-                                        Fecha Nac.
-                                    </th>
-                                    <th
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                    >
-                                        Acciones
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                <tr
-                                    v-for="student in students"
-                                    :key="student.id"
-                                >
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <div class="flex-shrink-0">
-                                                <div
-                                                    class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-semibold text-lg"
-                                                >
-                                                    {{
-                                                        getStudentInitial(
-                                                            student
-                                                        )
-                                                    }}
-                                                </div>
-                                            </div>
-                                            <div class="ml-4">
-                                                <div
-                                                    class="text-sm font-medium text-gray-900"
-                                                >
-                                                    {{ student.first_name }}
-                                                    {{ student.last_name }}
-                                                </div>
-                                                <div
-                                                    class="text-sm text-gray-500"
-                                                >
-                                                    {{ student.name }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div
-                                            v-if="student.parent"
-                                            class="flex items-center"
-                                        >
-                                            <div class="flex-shrink-0">
-                                                <div
-                                                    class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm"
-                                                >
-                                                    {{
-                                                        getParentInitial(
-                                                            student.parent
-                                                        )
-                                                    }}
-                                                </div>
-                                            </div>
-                                            <div class="ml-3">
-                                                <div
-                                                    class="text-sm font-medium text-gray-900"
-                                                >
-                                                    {{
-                                                        student.parent
-                                                            .first_name
-                                                    }}
-                                                    {{
-                                                        student.parent.last_name
-                                                    }}
-                                                </div>
-                                                <div
-                                                    class="text-sm text-gray-500"
-                                                >
-                                                    {{ student.parent.name }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <span
-                                            v-else
-                                            class="text-gray-400 text-sm"
-                                            >Sin padre asignado</span
-                                        >
-                                    </td>
-                                    <td
-                                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                                    >
-                                        {{ student.email }}
-                                    </td>
-                                    <td
-                                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                                    >
-                                        {{
-                                            student.birth_date
-                                                ? formatDate(student.birth_date)
-                                                : "-"
-                                        }}
-                                    </td>
-                                    <td
-                                        class="px-6 py-4 whitespace-nowrap text-sm font-medium"
-                                    >
-                                        <button
-                                            @click="editStudent(student)"
-                                            class="text-indigo-600 hover:text-indigo-900 mr-3"
-                                        >
-                                            Editar
-                                        </button>
-                                        <button
-                                            @click="
-                                                confirmDeleteStudent(student)
-                                            "
-                                            class="text-red-600 hover:text-red-900"
-                                        >
-                                            Eliminar
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
             </div>
         </div>
 
-        <!-- Modal de selección de padre -->
-        <div
-            v-if="showParentModal"
-            class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
-        >
-            <div
-                class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white"
-            >
-                <div class="mt-3">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-medium text-gray-900">
-                            Seleccionar Padre
-                        </h3>
-                        <button
-                            @click="showParentModal = false"
-                            class="text-gray-400 hover:text-gray-600"
-                        >
-                            <svg
-                                class="w-6 h-6"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12"
-                                ></path>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <!-- Búsqueda -->
-                    <div class="mb-4">
-                        <input
-                            v-model="parentSearch"
-                            type="text"
-                            placeholder="Buscar por nombre, apellido, usuario o email..."
-                            class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                            @input="searchParents"
-                        />
-                    </div>
-
-                    <!-- Lista de padres -->
-                    <div class="max-h-96 overflow-y-auto space-y-3">
-                        <div
-                            v-for="parent in filteredParents"
-                            :key="parent.id"
-                            @click="selectParent(parent)"
-                            class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                        >
-                            <div class="flex-shrink-0">
-                                <div
-                                    class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-lg"
-                                >
-                                    {{ parent.avatar_initial }}
-                                </div>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-900">
-                                    {{ parent.first_name }}
-                                    {{ parent.last_name }}
-                                </p>
-                                <p class="text-sm text-gray-500">
-                                    {{ parent.name }} • {{ parent.email }}
-                                </p>
-                            </div>
-                            <div class="flex-shrink-0">
-                                <svg
-                                    class="w-5 h-5 text-gray-400"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M9 5l7 7-7 7"
-                                    ></path>
-                                </svg>
-                            </div>
-                        </div>
-
-                        <div
-                            v-if="filteredParents.length === 0"
-                            class="text-center py-8 text-gray-500"
-                        >
-                            No se encontraron padres
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal de confirmación de eliminación -->
+        <!-- Modal de confirmación para eliminar estudiante -->
         <div
             v-if="showDeleteStudentModal"
             class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
         >
             <div
-                class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white"
+                class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
             >
-                <div class="mt-3">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-medium text-gray-900">
-                            Confirmar Eliminación
-                        </h3>
-                        <button
-                            @click="showDeleteStudentModal = false"
-                            class="text-gray-400 hover:text-gray-600"
+                <div class="mt-3 text-center">
+                    <div
+                        class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100"
+                    >
+                        <svg
+                            class="h-6 w-6 text-red-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
                         >
-                            <svg
-                                class="w-6 h-6"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12"
-                                ></path>
-                            </svg>
-                        </button>
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                            ></path>
+                        </svg>
                     </div>
-                    <p class="text-sm text-gray-800">
-                        ¿Estás seguro de que deseas eliminar al estudiante "{{
-                            studentToDelete?.first_name
-                        }}
-                        {{ studentToDelete?.last_name }}"? Esta acción no se
-                        puede deshacer.
-                    </p>
-                    <div class="flex justify-end space-x-3 mt-4">
+                    <h3 class="text-lg font-medium text-gray-900 mt-4">
+                        Confirmar Eliminación
+                    </h3>
+                    <div class="mt-2 px-7 py-3">
+                        <p class="text-sm text-gray-500">
+                            ¿Está seguro de que desea eliminar al estudiante
+                            <strong
+                                >{{ studentToDelete?.first_name }}
+                                {{ studentToDelete?.last_name }}</strong
+                            >?
+                        </p>
+                        <p class="text-sm text-gray-500 mt-2">
+                            Esta acción no se puede deshacer.
+                        </p>
+                    </div>
+                    <div class="flex justify-center space-x-3 mt-4">
                         <button
                             @click="cancelDeleteStudent"
-                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm font-medium"
+                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm font-medium transition-colors"
                         >
                             Cancelar
                         </button>
                         <button
                             @click="deleteStudentConfirmed"
-                            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                         >
                             Eliminar
                         </button>
@@ -519,32 +601,31 @@
                 </div>
             </div>
         </div>
-    </AuthenticatedLayout>
+    </AdminLayout>
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
-import { useForm } from "@inertiajs/vue3";
-import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
-import { router } from "@inertiajs/vue3";
+import { Head, useForm } from "@inertiajs/vue3";
+import { ref, computed } from "vue";
+import AdminLayout from "@/Layouts/AdminLayout.vue";
 
-// Props
 const props = defineProps({
     students: Array,
     parents: Array,
 });
 
-// Estado reactivo
+// Estados reactivos
 const showCreateForm = ref(false);
 const showParentModal = ref(false);
-const parentSearch = ref("");
-const selectedParent = ref(null);
-const emailError = ref("");
+const showEditStudentModal = ref(false);
 const showDeleteStudentModal = ref(false);
+const parentSearch = ref("");
+const selectedParent = ref({});
+const studentToEdit = ref(null);
 const studentToDelete = ref(null);
 
-// Formulario
-const studentForm = useForm({
+// Formularios
+const form = useForm({
     first_name: "",
     last_name: "",
     email: "",
@@ -553,10 +634,33 @@ const studentForm = useForm({
     gender: "",
 });
 
-// Computed
+const editStudentForm = useForm({
+    first_name: "",
+    last_name: "",
+    email: "",
+    parent_id: "",
+    birth_date: "",
+    gender: "",
+});
+
+// Validación de email
+const emailError = ref("");
+
+const validateEmail = () => {
+    const email = form.email;
+    if (email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            emailError.value = "Formato de email inválido";
+        } else {
+            emailError.value = "";
+        }
+    }
+};
+
+// Filtrado de padres
 const filteredParents = computed(() => {
     if (!parentSearch.value) return props.parents;
-
     const search = parentSearch.value.toLowerCase();
     return props.parents.filter(
         (parent) =>
@@ -568,24 +672,16 @@ const filteredParents = computed(() => {
 });
 
 // Métodos
-const createStudent = () => {
-    if (!selectedParent.value) {
-        alert("Debe seleccionar un padre para el estudiante");
-        return;
+const submitForm = () => {
+    if (selectedParent.value.id) {
+        form.parent_id = selectedParent.value.id;
     }
 
-    studentForm.parent_id = selectedParent.value.id;
-
-    studentForm.post(route("students.store"), {
+    form.post(route("students.store"), {
         onSuccess: () => {
+            form.reset();
+            selectedParent.value = {};
             showCreateForm.value = false;
-            clearForm();
-            clearSelectedParent();
-        },
-        onError: (errors) => {
-            if (errors.email) {
-                emailError.value = errors.email;
-            }
         },
     });
 };
@@ -593,32 +689,46 @@ const createStudent = () => {
 const selectParent = (parent) => {
     selectedParent.value = parent;
     showParentModal.value = false;
-    parentSearch.value = "";
 };
 
 const clearSelectedParent = () => {
-    selectedParent.value = null;
-    studentForm.parent_id = "";
-};
-
-const clearForm = () => {
-    studentForm.reset();
-    emailError.value = "";
-};
-
-const searchParents = () => {
-    // La búsqueda se hace localmente con computed
+    selectedParent.value = {};
 };
 
 const editStudent = (student) => {
-    // TODO: Implementar edición
-    console.log("Editar estudiante:", student);
+    studentToEdit.value = student;
+    editStudentForm.first_name = student.first_name;
+    editStudentForm.last_name = student.last_name;
+    editStudentForm.email = student.email;
+    editStudentForm.parent_id = student.parent_id;
+    editStudentForm.birth_date = student.birth_date;
+    editStudentForm.gender = student.gender;
+
+    if (student.parent) {
+        selectedParent.value = student.parent;
+    }
+
+    showEditStudentModal.value = true;
 };
 
-const deleteStudent = (studentId) => {
-    if (confirm("¿Está seguro de que desea eliminar este estudiante?")) {
-        router.delete(route("students.destroy", studentId));
+const updateStudent = () => {
+    if (selectedParent.value.id) {
+        editStudentForm.parent_id = selectedParent.value.id;
     }
+
+    editStudentForm.put(route("students.update", studentToEdit.value.id), {
+        onSuccess: () => {
+            showEditStudentModal.value = false;
+            studentToEdit.value = null;
+            selectedParent.value = {};
+        },
+    });
+};
+
+const cancelEdit = () => {
+    showEditStudentModal.value = false;
+    studentToEdit.value = null;
+    selectedParent.value = {};
 };
 
 const confirmDeleteStudent = (student) => {
@@ -628,7 +738,7 @@ const confirmDeleteStudent = (student) => {
 
 const deleteStudentConfirmed = () => {
     if (studentToDelete.value) {
-        router.delete(route("students.destroy", studentToDelete.value.id), {
+        useForm().delete(route("students.destroy", studentToDelete.value.id), {
             onSuccess: () => {
                 showDeleteStudentModal.value = false;
                 studentToDelete.value = null;
@@ -642,23 +752,10 @@ const cancelDeleteStudent = () => {
     studentToDelete.value = null;
 };
 
-const getStudentInitial = (student) => {
-    return (student.first_name || student.name || "E").charAt(0).toUpperCase();
+const getInitials = (firstName, lastName) => {
+    if (firstName && lastName) {
+        return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+    }
+    return "?";
 };
-
-const getParentInitial = (parent) => {
-    return (parent.first_name || parent.name || "P").charAt(0).toUpperCase();
-};
-
-const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("es-ES");
-};
-
-// Limpiar error de email cuando cambie
-const clearEmailError = () => {
-    emailError.value = "";
-};
-
-// Watchers
-watch(() => studentForm.email, clearEmailError);
 </script>

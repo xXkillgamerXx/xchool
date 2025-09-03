@@ -6,6 +6,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StudentManagementController;
+use App\Http\Controllers\ActivityLogController;
 
 use Inertia\Inertia;
 
@@ -47,6 +48,10 @@ Route::middleware('auth')->group(function () {
     // Rutas de gestión de estudiantes (solo colegios)
     Route::resource('students', StudentManagementController::class)->except(['show']);
     Route::get('/students/search-parents', [StudentManagementController::class, 'searchParents'])->name('students.search-parents');
+
+    // Rutas del historial de actividades (solo colegios)
+    Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
+    Route::get('/activity-log/{model_type}/{model_id}', [ActivityLogController::class, 'forModel'])->name('activity-log.model');
 });
 
 // Habilitar solo las rutas de autenticación necesarias (login, logout, etc.)

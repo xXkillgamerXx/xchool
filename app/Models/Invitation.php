@@ -4,11 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
+use App\Traits\LogsActivity;
 
 class Invitation extends Model
 {
     use HasFactory;
+    use LogsActivity;
 
     protected $fillable = [
         'email', 

@@ -95,11 +95,22 @@ class StudentManagementController extends Controller
         $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $student->id,
+            'email' => [
+                'required',
+                'email',
+                'unique:users,email,' . $student->id,
+                'unique:invitations,email'
+            ],
             'parent_id' => 'required|exists:users,id',
             'birth_date' => 'nullable|date',
             'gender' => 'nullable|in:masculino,femenino,otro',
+        ], [
+            'email.unique' => 'Este email ya está registrado en el sistema.',
+            'parent_id.required' => 'Debe seleccionar un padre para el estudiante.',
+            'parent_id.exists' => 'El padre seleccionado no existe en el sistema.',
         ]);
+
+        $oldValues = $student->only(['first_name', 'last_name', 'email', 'parent_id', 'birth_date', 'gender']);
 
         $student->update($request->only([
             'first_name', 'last_name', 'email', 'parent_id', 'birth_date', 'gender'
