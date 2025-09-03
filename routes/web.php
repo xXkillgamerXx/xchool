@@ -30,6 +30,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('user-management.invite');
     Route::delete('/user-management/invitation/{invitation}', [UserManagementController::class, 'deleteInvitation'])
         ->name('user-management.delete-invitation');
+    Route::delete('/user-management/user/{user}', [UserManagementController::class, 'deleteUser'])
+        ->name('user-management.delete-user');
 });
 
 // Ruta para aceptar invitaciones (pública)

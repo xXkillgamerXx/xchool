@@ -10,6 +10,10 @@ const props = defineProps({
 });
 
 const showInviteForm = ref(false);
+const showDeleteUserModal = ref(false);
+const showDeleteInvitationModal = ref(false);
+const userToDelete = ref(null);
+const invitationToDelete = ref(null);
 
 const inviteForm = useForm({
     email: "",
@@ -25,12 +29,52 @@ const submitInvite = () => {
     });
 };
 
-const deleteInvitation = (invitationId) => {
-    if (confirm("¿Estás seguro de que quieres eliminar esta invitación?")) {
+const confirmDeleteUser = (user) => {
+    userToDelete.value = user;
+    showDeleteUserModal.value = true;
+};
+
+const confirmDeleteInvitation = (invitation) => {
+    invitationToDelete.value = invitation;
+    showDeleteInvitationModal.value = true;
+};
+
+const deleteUser = () => {
+    if (userToDelete.value) {
         useForm().delete(
-            route("user-management.delete-invitation", invitationId)
+            route("user-management.delete-user", userToDelete.value.id),
+            {
+                onSuccess: () => {
+                    showDeleteUserModal.value = false;
+                    userToDelete.value = null;
+                },
+            }
         );
     }
+};
+
+const deleteInvitation = () => {
+    if (invitationToDelete.value) {
+        useForm().delete(
+            route(
+                "user-management.delete-invitation",
+                invitationToDelete.value.id
+            ),
+            {
+                onSuccess: () => {
+                    showDeleteInvitationModal.value = false;
+                    invitationToDelete.value = null;
+                },
+            }
+        );
+    }
+};
+
+const cancelDelete = () => {
+    showDeleteUserModal.value = false;
+    showDeleteInvitationModal.value = false;
+    userToDelete.value = null;
+    invitationToDelete.value = null;
 };
 </script>
 
@@ -162,6 +206,11 @@ const deleteInvitation = (invitationId) => {
                                         >
                                             Fecha de Registro
                                         </th>
+                                        <th
+                                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        >
+                                            Acciones
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody
@@ -191,6 +240,16 @@ const deleteInvitation = (invitationId) => {
                                                     user.created_at
                                                 ).toLocaleDateString()
                                             }}
+                                        </td>
+                                        <td
+                                            class="px-6 py-4 whitespace-nowrap text-sm font-medium"
+                                        >
+                                            <button
+                                                @click="confirmDeleteUser(user)"
+                                                class="text-red-600 hover:text-red-900"
+                                            >
+                                                Eliminar
+                                            </button>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -237,13 +296,128 @@ const deleteInvitation = (invitationId) => {
                                     </p>
                                 </div>
                                 <button
-                                    @click="deleteInvitation(invitation.id)"
+                                    @click="confirmDeleteInvitation(invitation)"
                                     class="bg-red-500 hover:bg-red-700 text-white text-sm px-3 py-1 rounded"
                                 >
                                     Eliminar
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de confirmación para eliminar usuario -->
+        <div
+            v-if="showDeleteUserModal"
+            class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+        >
+            <div
+                class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+            >
+                <div class="mt-3 text-center">
+                    <div
+                        class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100"
+                    >
+                        <svg
+                            class="h-6 w-6 text-red-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                            ></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mt-4">
+                        Confirmar Eliminación
+                    </h3>
+                    <div class="mt-2 px-7 py-3">
+                        <p class="text-sm text-gray-500">
+                            ¿Está seguro de que desea eliminar al usuario
+                            <strong>{{ userToDelete?.name }}</strong
+                            >?
+                        </p>
+                        <p class="text-sm text-gray-500 mt-2">
+                            Esta acción no se puede deshacer.
+                        </p>
+                    </div>
+                    <div class="flex justify-center space-x-3 mt-4">
+                        <button
+                            @click="cancelDelete"
+                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm font-medium"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            @click="deleteUser"
+                            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                        >
+                            Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de confirmación para eliminar invitación -->
+        <div
+            v-if="showDeleteInvitationModal"
+            class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+        >
+            <div
+                class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+            >
+                <div class="mt-3 text-center">
+                    <div
+                        class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100"
+                    >
+                        <svg
+                            class="h-6 w-6 text-red-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                            ></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mt-4">
+                        Confirmar Eliminación
+                    </h3>
+                    <div class="mt-2 px-7 py-3">
+                        <p class="text-sm text-gray-500">
+                            ¿Está seguro de que desea eliminar la invitación
+                            para
+                            <strong>{{ invitationToDelete?.email }}</strong
+                            >?
+                        </p>
+                        <p class="text-sm text-gray-500 mt-2">
+                            Esta acción no se puede deshacer.
+                        </p>
+                    </div>
+                    <div class="flex justify-center space-x-3 mt-4">
+                        <button
+                            @click="cancelDelete"
+                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm font-medium"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            @click="deleteInvitation"
+                            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                        >
+                            Eliminar
+                        </button>
                     </div>
                 </div>
             </div>

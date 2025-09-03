@@ -351,7 +351,9 @@
                                             Editar
                                         </button>
                                         <button
-                                            @click="deleteStudent(student.id)"
+                                            @click="
+                                                confirmDeleteStudent(student)
+                                            "
                                             class="text-red-600 hover:text-red-900"
                                         >
                                             Eliminar
@@ -460,6 +462,63 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal de confirmación de eliminación -->
+        <div
+            v-if="showDeleteStudentModal"
+            class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+        >
+            <div
+                class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white"
+            >
+                <div class="mt-3">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">
+                            Confirmar Eliminación
+                        </h3>
+                        <button
+                            @click="showDeleteStudentModal = false"
+                            class="text-gray-400 hover:text-gray-600"
+                        >
+                            <svg
+                                class="w-6 h-6"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"
+                                ></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-800">
+                        ¿Estás seguro de que deseas eliminar al estudiante "{{
+                            studentToDelete?.first_name
+                        }}
+                        {{ studentToDelete?.last_name }}"? Esta acción no se
+                        puede deshacer.
+                    </p>
+                    <div class="flex justify-end space-x-3 mt-4">
+                        <button
+                            @click="cancelDeleteStudent"
+                            class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm font-medium"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            @click="deleteStudentConfirmed"
+                            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                        >
+                            Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </AuthenticatedLayout>
 </template>
 
@@ -481,6 +540,8 @@ const showParentModal = ref(false);
 const parentSearch = ref("");
 const selectedParent = ref(null);
 const emailError = ref("");
+const showDeleteStudentModal = ref(false);
+const studentToDelete = ref(null);
 
 // Formulario
 const studentForm = useForm({
@@ -558,6 +619,27 @@ const deleteStudent = (studentId) => {
     if (confirm("¿Está seguro de que desea eliminar este estudiante?")) {
         router.delete(route("students.destroy", studentId));
     }
+};
+
+const confirmDeleteStudent = (student) => {
+    studentToDelete.value = student;
+    showDeleteStudentModal.value = true;
+};
+
+const deleteStudentConfirmed = () => {
+    if (studentToDelete.value) {
+        router.delete(route("students.destroy", studentToDelete.value.id), {
+            onSuccess: () => {
+                showDeleteStudentModal.value = false;
+                studentToDelete.value = null;
+            },
+        });
+    }
+};
+
+const cancelDeleteStudent = () => {
+    showDeleteStudentModal.value = false;
+    studentToDelete.value = null;
 };
 
 const getStudentInitial = (student) => {

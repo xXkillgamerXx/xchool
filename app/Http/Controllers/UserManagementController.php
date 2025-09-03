@@ -188,4 +188,29 @@ class UserManagementController extends Controller
 
         return redirect()->back()->with('success', 'Invitación eliminada correctamente.');
     }
+
+    /**
+     * Delete a user.
+     */
+    public function deleteUser(Request $request, User $user)
+    {
+        // Verificar que el usuario sea colegio
+        if (!$request->user()->isColegio()) {
+            abort(403, 'Acceso denegado.');
+        }
+
+        // No permitir eliminar usuarios colegio
+        if ($user->role->name === 'colegio') {
+            abort(403, 'No se puede eliminar un usuario colegio.');
+        }
+
+        // No permitir eliminar al usuario actual
+        if ($user->id === $request->user()->id) {
+            abort(403, 'No se puede eliminar tu propia cuenta.');
+        }
+
+        $user->delete();
+
+        return redirect()->back()->with('success', 'Usuario eliminado exitosamente.');
+    }
 }
