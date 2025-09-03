@@ -1,19 +1,43 @@
 <template>
     <div class="min-h-screen bg-gray-100">
         <!-- Sidebar -->
-        <div class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out"
-             :class="{ '-translate-x-full': !sidebarOpen, 'translate-x-0': sidebarOpen }">
+        <div
+            class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out"
+            :class="{
+                '-translate-x-full': !sidebarOpen && !isFullscreen,
+                'translate-x-0': sidebarOpen || isFullscreen,
+            }"
+        >
             <!-- Logo y título -->
-            <div class="flex items-center justify-between h-16 px-6 bg-indigo-600">
+            <div
+                class="flex items-center justify-between h-16 px-6 bg-indigo-600"
+            >
                 <div class="flex items-center">
-                    <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                    <div
+                        class="w-8 h-8 bg-white rounded-lg flex items-center justify-center"
+                    >
                         <span class="text-indigo-600 font-bold text-xl">X</span>
                     </div>
-                    <h1 class="ml-3 text-white font-semibold text-lg">Admin Panel</h1>
+                    <h1 class="ml-3 text-white font-semibold text-lg">
+                        Admin Panel
+                    </h1>
                 </div>
-                <button @click="sidebarOpen = false" class="text-white lg:hidden">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                <button
+                    @click="sidebarOpen = false"
+                    class="text-white lg:hidden"
+                >
+                    <svg
+                        class="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"
+                        ></path>
                     </svg>
                 </button>
             </div>
@@ -22,72 +46,163 @@
             <nav class="mt-6 px-3">
                 <div class="space-y-2">
                     <!-- Dashboard -->
-                    <Link :href="route('dashboard')" 
-                          :class="[
-                              'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
-                              route().current('dashboard') 
-                                  ? 'bg-indigo-100 text-indigo-700' 
-                                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                          ]">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"></path>
+                    <Link
+                        :href="route('dashboard')"
+                        :class="[
+                            'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                            route().current('dashboard')
+                                ? 'bg-indigo-100 text-indigo-700'
+                                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900',
+                        ]"
+                    >
+                        <svg
+                            class="w-5 h-5 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
+                            ></path>
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"
+                            ></path>
                         </svg>
                         Dashboard
                     </Link>
 
                     <!-- Gestión de Usuarios -->
-                    <Link :href="route('user-management.index')" 
-                          :class="[
-                              'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
-                              route().current('user-management.*') 
-                                  ? 'bg-indigo-100 text-indigo-700' 
-                                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                          ]">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                    <Link
+                        :href="route('user-management.index')"
+                        :class="[
+                            'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                            route().current('user-management.*')
+                                ? 'bg-indigo-100 text-indigo-700'
+                                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900',
+                        ]"
+                    >
+                        <svg
+                            class="w-5 h-5 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+                            ></path>
                         </svg>
                         Gestión de Usuarios
                     </Link>
 
                     <!-- Gestión de Estudiantes -->
-                    <Link :href="route('students.index')" 
-                          :class="[
-                              'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
-                              route().current('students.*') 
-                                  ? 'bg-indigo-100 text-indigo-700' 
-                                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                          ]">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    <Link
+                        :href="route('students.index')"
+                        :class="[
+                            'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                            route().current('students.*')
+                                ? 'bg-indigo-100 text-indigo-700'
+                                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900',
+                        ]"
+                    >
+                        <svg
+                            class="w-5 h-5 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                            ></path>
                         </svg>
                         Gestión de Estudiantes
                     </Link>
 
+                    <!-- Gestión de Horarios -->
+                    <Link
+                        :href="route('schedule-management.index')"
+                        :class="[
+                            'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                            route().current('schedule-management.*')
+                                ? 'bg-indigo-100 text-indigo-700'
+                                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900',
+                        ]"
+                    >
+                        <svg
+                            class="w-5 h-5 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            ></path>
+                        </svg>
+                        Gestión de Horarios
+                    </Link>
+
                     <!-- Historial de Actividades -->
-                    <Link :href="route('activity-log.index')" 
-                          :class="[
-                              'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
-                              route().current('activity-log.*') 
-                                  ? 'bg-indigo-100 text-indigo-700' 
-                                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                          ]">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    <Link
+                        :href="route('activity-log.index')"
+                        :class="[
+                            'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                            route().current('activity-log.*')
+                                ? 'bg-indigo-100 text-indigo-700'
+                                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900',
+                        ]"
+                    >
+                        <svg
+                            class="w-5 h-5 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                            ></path>
                         </svg>
                         Historial de Actividades
                     </Link>
 
                     <!-- Perfil -->
-                    <Link :href="route('profile.edit')" 
-                          :class="[
-                              'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
-                              route().current('profile.*') 
-                                  ? 'bg-indigo-100 text-indigo-700' 
-                                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                          ]">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    <Link
+                        :href="route('profile.edit')"
+                        :class="[
+                            'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                            route().current('profile.*')
+                                ? 'bg-indigo-100 text-indigo-700'
+                                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900',
+                        ]"
+                    >
+                        <svg
+                            class="w-5 h-5 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            ></path>
                         </svg>
                         Mi Perfil
                     </Link>
@@ -95,19 +210,34 @@
             </nav>
 
             <!-- Información del usuario -->
-            <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+            <div
+                class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200"
+            >
                 <div class="flex items-center">
-                    <div class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                    <div
+                        class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm"
+                    >
                         {{ getUserInitials() }}
                     </div>
                     <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-900">{{ user.name }}</p>
-                        <p class="text-xs text-gray-500">{{ user.role_display }}</p>
+                        <p class="text-sm font-medium text-gray-900">
+                            {{ user.name }}
+                        </p>
+                        <p class="text-xs text-gray-500">
+                            {{ user.role_display }}
+                        </p>
                     </div>
                 </div>
                 <form method="POST" action="/logout" class="mt-3">
-                    <input type="hidden" name="_token" :value="$page.props.csrf_token">
-                    <button type="submit" class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">
+                    <input
+                        type="hidden"
+                        name="_token"
+                        :value="$page.props.csrf_token"
+                    />
+                    <button
+                        type="submit"
+                        class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                    >
                         Cerrar Sesión
                     </button>
                 </form>
@@ -115,19 +245,43 @@
         </div>
 
         <!-- Overlay para móvil -->
-        <div v-if="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"></div>
+        <div
+            v-if="sidebarOpen && !isFullscreen"
+            @click="sidebarOpen = false"
+            class="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
+        ></div>
 
         <!-- Contenido principal -->
-        <div class="lg:pl-64">
+        <div
+            :class="{
+                'lg:pl-64': isLargeScreen || isFullscreen,
+                'pl-0': !isLargeScreen && !isFullscreen,
+            }"
+        >
             <!-- Header móvil -->
             <div class="lg:hidden bg-white shadow-sm border-b border-gray-200">
                 <div class="flex items-center justify-between px-4 py-3">
-                    <button @click="sidebarOpen = true" class="text-gray-500 hover:text-gray-700">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    <button
+                        @click="sidebarOpen = true"
+                        class="text-gray-500 hover:text-gray-700"
+                    >
+                        <svg
+                            class="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16"
+                            ></path>
                         </svg>
                     </button>
-                    <h1 class="text-lg font-semibold text-gray-900">Xchool Admin</h1>
+                    <h1 class="text-lg font-semibold text-gray-900">
+                        Xchool Admin
+                    </h1>
                     <div class="w-6"></div>
                 </div>
             </div>
@@ -143,22 +297,88 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { Link } from '@inertiajs/vue3'
+import { ref, onMounted, onUnmounted } from "vue";
+import { Link } from "@inertiajs/vue3";
 
 // Props
 const props = defineProps({
     user: Object,
-})
+});
 
 // Estado reactivo
-const sidebarOpen = ref(false)
+const sidebarOpen = ref(false);
+const isFullscreen = ref(false);
+const isLargeScreen = ref(false);
 
 // Métodos
 const getUserInitials = () => {
     if (props.user.first_name && props.user.last_name) {
-        return (props.user.first_name.charAt(0) + props.user.last_name.charAt(0)).toUpperCase()
+        return (
+            props.user.first_name.charAt(0) + props.user.last_name.charAt(0)
+        ).toUpperCase();
     }
-    return props.user.name.charAt(0).toUpperCase()
-}
+    return props.user.name.charAt(0).toUpperCase();
+};
+
+// Detectar modo pantalla completa
+const checkFullscreen = () => {
+    isFullscreen.value = !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement
+    );
+};
+
+// Detectar tamaño de pantalla
+const checkScreenSize = () => {
+    isLargeScreen.value = window.innerWidth >= 1024; // lg breakpoint de Tailwind
+};
+
+// Manejar cambios de tamaño de ventana
+const handleResize = () => {
+    checkScreenSize();
+    // Si es pantalla grande o está en modo pantalla completa, mantener sidebar abierto
+    if (isLargeScreen.value || isFullscreen.value) {
+        sidebarOpen.value = true;
+    }
+};
+
+// Manejar eventos de pantalla completa
+const handleFullscreenChange = () => {
+    checkFullscreen();
+    // Si está en modo pantalla completa, mantener sidebar abierto
+    if (isFullscreen.value) {
+        sidebarOpen.value = true;
+    }
+};
+
+// Lifecycle hooks
+onMounted(() => {
+    checkFullscreen();
+    checkScreenSize();
+
+    // Configurar sidebar inicial basado en tamaño de pantalla
+    if (isLargeScreen.value || isFullscreen.value) {
+        sidebarOpen.value = true;
+    }
+
+    // Event listeners
+    window.addEventListener("resize", handleResize);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    document.addEventListener("mozfullscreenchange", handleFullscreenChange);
+    document.addEventListener("MSFullscreenChange", handleFullscreenChange);
+});
+
+onUnmounted(() => {
+    window.removeEventListener("resize", handleResize);
+    document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    document.removeEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange
+    );
+    document.removeEventListener("mozfullscreenchange", handleFullscreenChange);
+    document.removeEventListener("MSFullscreenChange", handleFullscreenChange);
+});
 </script>

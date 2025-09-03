@@ -28,6 +28,7 @@ class User extends Authenticatable
         'password',
         'role_id',
         'parent_id',
+        'grade_id',
     ];
 
     /**
@@ -168,5 +169,74 @@ class User extends Authenticatable
     public function getDisplayNameAttribute(): string
     {
         return $this->full_name ?: $this->name;
+    }
+
+    /**
+     * Get the grade of this user (if estudiante).
+     */
+    public function grade(): BelongsTo
+    {
+        return $this->belongsTo(Grade::class);
+    }
+
+    /**
+     * Get the schedules for this user's grade (if estudiante).
+     */
+    public function schedules(): HasMany
+    {
+        if ($this->isStudent() && $this->grade_id) {
+            return $this->grade->schedules();
+        }
+        return $this->newQuery()->whereRaw('1 = 0'); // Empty collection
+    }
+
+    /**
+     * Get the schedules where this user is the teacher.
+     */
+    public function teachingSchedules(): HasMany
+    {
+        if ($this->isProfesor()) {
+            return $this->hasMany(Schedule::class, 'teacher_id');
+        }
+        return $this->newQuery()->whereRaw('1 = 0'); // Empty collection
+    }
+
+    /**
+     * Get the current class for a student.
+     */
+    public function getCurrentClassAttribute()
+    {
+        if (!$this->isStudent() || !$this->grade_id) {
+            return null;
+        }
+
+        $now = now();
+        $currentDay = strtolower($now->format('l'));
+        $currentTime = $now->format('H:i:s');
+
+        return $this->schedules()
+            ->where('day', $currentDay)
+            ->where('start_time', '<=', $currentTime)
+            ->where('end_time', '>=', $currentTime)
+            ->with(['course', 'teacher'])
+            ->first();
+    }
+
+    /**
+     * Get the next class for a student.
+     */
+    public function getNextClassAttribute()
+    {
+        if (!$this->isStudent() || !$this->grade_id) {
+            return $this->schedules()
+                ->where('day', '>=', strtolower(now()->format('l')))
+                ->where('start_time', '>', now()->format('H:i:s'))
+                ->with(['course', 'teacher'])
+                ->orderBy('day')
+                ->orderBy('start_time')
+                ->first();
+        }
+
+        return null;
     }
 }
