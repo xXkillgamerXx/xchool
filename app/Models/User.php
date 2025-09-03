@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -25,6 +26,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role_id',
+        'parent_id',
     ];
 
     /**
@@ -104,6 +106,48 @@ class User extends Authenticatable
     public function isSuplidor(): bool
     {
         return $this->role->isSuplidor();
+    }
+
+    /**
+     * Get the students assigned to this user (if padre).
+     */
+    public function students(): HasMany
+    {
+        return $this->hasMany(User::class, 'parent_id')->whereHas('role', function($query) {
+            $query->where('name', 'estudiante');
+        });
+    }
+
+    /**
+     * Get the parent of this user (if estudiante).
+     */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'parent_id');
+    }
+
+    /**
+     * Check if user is a parent.
+     */
+    public function isParent(): bool
+    {
+        return $this->hasRole('padre');
+    }
+
+    /**
+     * Check if user is a student.
+     */
+    public function isStudent(): bool
+    {
+        return $this->hasRole('estudiante');
+    }
+
+    /**
+     * Get the students count for a parent.
+     */
+    public function getStudentsCountAttribute(): int
+    {
+        return $this->students()->count();
     }
 
     /**

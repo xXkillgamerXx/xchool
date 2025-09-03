@@ -5,6 +5,8 @@ use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\StudentManagementController;
+
 use Inertia\Inertia;
 
 Route::get('/', function () {
@@ -35,9 +37,14 @@ Route::get('/invitation/{token}', [UserManagementController::class, 'acceptInvit
     ->name('invitation.accept');
 
 Route::middleware('auth')->group(function () {
+    // Rutas del perfil
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Rutas de gestión de estudiantes (solo colegios)
+    Route::resource('students', StudentManagementController::class)->except(['show']);
+    Route::get('/students/search-parents', [StudentManagementController::class, 'searchParents'])->name('students.search-parents');
 });
 
 // Habilitar solo las rutas de autenticación necesarias (login, logout, etc.)

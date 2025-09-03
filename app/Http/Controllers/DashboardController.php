@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\User;
 
 class DashboardController extends Controller
 {
@@ -50,76 +51,64 @@ class DashboardController extends Controller
         switch ($user->role->name) {
             case 'colegio':
                 $dashboardData['stats'] = [
-                    'total_profesores' => 25,
-                    'total_estudiantes' => 450,
-                    'total_padres' => 380,
-                    'total_cursos' => 15,
+                    'total_profesores' => User::whereHas('role', fn($q) => $q->where('name', 'profesor'))->count(),
+                    'total_padres' => User::whereHas('role', fn($q) => $q->where('name', 'padre'))->count(),
+                    'total_estudiantes' => User::whereHas('role', fn($q) => $q->where('name', 'estudiante'))->count(),
+                    'total_usuarios' => User::count(),
                 ];
                 $dashboardData['recent_activities'] = [
-                    'Nuevo profesor registrado',
-                    'Reporte de asistencia generado',
-                    'Pago de matrícula recibido',
+                    'Últimos usuarios creados',
+                    'Gestión de estudiantes',
+                    'Asignaciones padre-estudiante',
                 ];
                 break;
-
+            
             case 'profesor':
                 $dashboardData['stats'] = [
-                    'total_profesores' => 25,
-                    'total_estudiantes' => 450,
-                    'total_padres' => 380,
-                    'total_cursos' => 15,
+                    'cursos_asignados' => 0, // TODO: Implementar cuando tengamos cursos
+                    'total_estudiantes' => 0,
                 ];
                 $dashboardData['recent_activities'] = [
-                    'Evaluación de matemáticas calificada',
-                    'Asistencia del día registrada',
-                    'Comunicado enviado a padres',
+                    'Ver cursos asignados',
+                    'Gestionar estudiantes',
                 ];
                 break;
-
+            
             case 'padre':
+                $students = $user->students;
                 $dashboardData['stats'] = [
-                    'hijos_registrados' => 2,
-                    'notas_promedio' => '8.5',
-                    'asistencia_hijos' => '95%',
-                    'comunicados_recibidos' => 5,
+                    'hijos_asignados' => $students->count(),
+                    'total_estudiantes' => $students->count(),
                 ];
                 $dashboardData['recent_activities'] = [
-                    'Nota de matemáticas recibida',
-                    'Reporte de asistencia disponible',
-                    'Pago de matrícula confirmado',
+                    'Ver información de hijos',
+                    'Actualizar perfil',
                 ];
                 break;
-
+            
             case 'estudiante':
                 $dashboardData['stats'] = [
-                    'nota_promedio' => '8.7',
-                    'asistencia' => '96%',
-                    'cursos_inscritos' => 6,
-                    'tareas_pendientes' => 2,
+                    'cursos_inscritos' => 0, // TODO: Implementar cuando tengamos cursos
+                    'notas_promedio' => 'N/A',
                 ];
                 $dashboardData['recent_activities'] = [
-                    'Nota de historia recibida: 9.0',
-                    'Tarea de ciencias entregada',
-                    'Asistencia del día confirmada',
+                    'Ver mis cursos',
+                    'Ver mis notas',
                 ];
                 break;
-
+            
             case 'suplidor':
                 $dashboardData['stats'] = [
-                    'servicios_activos' => 3,
-                    'facturas_pendientes' => 2,
-                    'total_contratos' => 5,
-                    'calificacion_servicio' => '4.8/5.0',
+                    'servicios_activos' => 0,
+                    'contratos_vigentes' => 0,
                 ];
                 $dashboardData['recent_activities'] = [
-                    'Factura de limpieza enviada',
-                    'Servicio de mantenimiento completado',
-                    'Nuevo contrato firmado',
+                    'Gestionar servicios',
+                    'Ver contratos',
                 ];
                 break;
-
+            
             default:
-                // Rol no reconocido
                 $dashboardData['stats'] = [];
                 $dashboardData['recent_activities'] = ['Rol no configurado'];
                 break;

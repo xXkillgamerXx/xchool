@@ -45,6 +45,29 @@ defineProps({
                     </div>
                 </div>
 
+                <!-- Enlace a gestión de estudiantes para colegios -->
+                <div
+                    v-if="user.role === 'colegio'"
+                    class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6"
+                >
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-medium text-purple-900">
+                                Gestión de Estudiantes
+                            </h3>
+                            <p class="text-purple-700">
+                                Crea estudiantes y asígnalos a padres
+                            </p>
+                        </div>
+                        <Link
+                            :href="route('students.index')"
+                            class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                        >
+                            Gestionar Estudiantes
+                        </Link>
+                    </div>
+                </div>
+
                 <!-- Enlace al perfil para todos los usuarios -->
                 <div
                     class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6"

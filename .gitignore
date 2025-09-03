@@ -23,3 +23,8 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+app/Models/Course.php
+app/Models/Student.php
+database/migrations/0001_01_01_000006_create_students_table.php
+database/migrations/0001_01_01_000007_create_courses_table.php
+database/migrations/0001_01_01_000008_create_student_course_table.php
