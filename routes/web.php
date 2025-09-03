@@ -84,24 +84,15 @@ Route::middleware('auth')->group(function () {
     
     // Rutas para obtener horarios (colegios y profesores)
     Route::get('/schedule-management/grades/{grade}/schedules', [ScheduleManagementController::class, 'getSchedulesByGrade'])
-        ->middleware('role:colegio')
-        ->name('schedule-management.grades.schedules');
-    Route::get('/schedule-management/grades/{grade}/schedules', [ScheduleManagementController::class, 'getSchedulesByGrade'])
-        ->middleware('role:profesor')
+        ->middleware('role:colegio,profesor')
         ->name('schedule-management.grades.schedules');
         
     Route::get('/schedule-management/teachers/{teacher}/schedules', [ScheduleManagementController::class, 'getSchedulesByTeacher'])
-        ->middleware('role:colegio')
-        ->name('schedule-management.teachers.schedules');
-    Route::get('/schedule-management/teachers/{teacher}/schedules', [ScheduleManagementController::class, 'getSchedulesByTeacher'])
-        ->middleware('role:profesor')
+        ->middleware('role:colegio,profesor')
         ->name('schedule-management.teachers.schedules');
         
     Route::get('/schedule-management/students/{student}/schedules', [ScheduleManagementController::class, 'getSchedulesByStudent'])
-        ->middleware('role:colegio')
-        ->name('schedule-management.students.schedules');
-    Route::get('/schedule-management/students/{student}/schedules', [ScheduleManagementController::class, 'getSchedulesByStudent'])
-        ->middleware('role:profesor')
+        ->middleware('role:colegio,profesor')
         ->name('schedule-management.students.schedules');
 });
 

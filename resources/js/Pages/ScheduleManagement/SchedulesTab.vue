@@ -182,7 +182,7 @@
         <div class="bg-white shadow rounded-lg">
             <div class="px-6 py-4 border-b border-gray-200">
                 <h3 class="text-lg font-medium text-gray-900">
-                    Vista de Horarios
+                    Vista de Horarios por Grado
                 </h3>
                 <div class="mt-2">
                     <label
@@ -209,64 +209,192 @@
                 </div>
             </div>
             <div class="p-6">
+                <!-- Estadísticas del grado seleccionado -->
+                <div v-if="selectedGrade" class="mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <div class="text-sm font-medium text-blue-600">
+                                Total de Clases
+                            </div>
+                            <div class="text-2xl font-bold text-blue-900">
+                                {{ totalClasses }}
+                            </div>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <div class="text-sm font-medium text-green-600">
+                                Cursos Únicos
+                            </div>
+                            <div class="text-2xl font-bold text-green-900">
+                                {{ uniqueCourses }}
+                            </div>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <div class="text-sm font-medium text-purple-600">
+                                Profesores Asignados
+                            </div>
+                            <div class="text-2xl font-bold text-purple-900">
+                                {{ uniqueTeachers }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Horario semanal visual -->
                 <div
-                    v-if="selectedGrade && schedules.length > 0"
-                    class="space-y-4"
+                    v-if="selectedGrade && Object.keys(schedules).length > 0"
+                    class="mb-6"
                 >
-                    <div
-                        v-for="(daySchedules, day) in schedules"
-                        :key="day"
-                        class="border rounded-lg p-4"
-                    >
-                        <h4 class="text-lg font-medium text-gray-900 mb-3">
-                            {{ getDayName(day) }}
-                        </h4>
-                        <div class="space-y-2">
-                            <div
-                                v-for="schedule in daySchedules"
-                                :key="schedule.id"
-                                class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    <h4 class="text-lg font-medium text-gray-900 mb-4">
+                        Horario Semanal
+                    </h4>
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+                        <div
+                            v-for="(daySchedules, day) in schedules"
+                            :key="day"
+                            class="space-y-2"
+                        >
+                            <h5
+                                class="font-semibold text-gray-900 text-center py-2 bg-gray-50 rounded-md"
                             >
-                                <div class="flex items-center space-x-4">
+                                {{ getDayName(day) }}
+                            </h5>
+                            <div class="space-y-2">
+                                <div
+                                    v-for="schedule in daySchedules"
+                                    :key="schedule.id"
+                                    class="p-3 border rounded-lg bg-white shadow-sm"
+                                >
                                     <div
-                                        class="w-4 h-4 rounded"
-                                        :style="{
-                                            backgroundColor:
-                                                schedule.course.color,
-                                        }"
-                                    ></div>
-                                    <span class="font-medium">{{
-                                        schedule.course.name
-                                    }}</span>
-                                    <span class="text-sm text-gray-500">{{
-                                        schedule.time_range
-                                    }}</span>
-                                    <span class="text-sm text-gray-500"
-                                        >{{ schedule.teacher.first_name }}
-                                        {{ schedule.teacher.last_name }}</span
+                                        class="text-sm font-medium text-gray-900"
                                     >
-                                    <span
+                                        {{ schedule.course.name }}
+                                    </div>
+                                    <div
+                                        class="text-xs text-indigo-600 font-medium"
+                                    >
+                                        {{ formatTime(schedule.start_time) }} -
+                                        {{ formatTime(schedule.end_time) }}
+                                    </div>
+                                    <div class="text-xs text-gray-500">
+                                        {{ schedule.teacher.first_name }}
+                                        {{ schedule.teacher.last_name }}
+                                    </div>
+                                    <div
                                         v-if="schedule.room"
-                                        class="text-sm text-gray-500"
-                                        >({{ schedule.room }})</span
+                                        class="text-xs text-gray-400"
                                     >
-                                </div>
-                                <div class="flex space-x-2">
-                                    <button
-                                        class="text-indigo-600 hover:text-indigo-900 text-sm"
-                                    >
-                                        Editar
-                                    </button>
-                                    <button
-                                        class="text-red-600 hover:text-red-900 text-sm"
-                                    >
-                                        Eliminar
-                                    </button>
+                                        Aula: {{ schedule.room }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Lista detallada -->
+                <div v-if="selectedGrade && Object.keys(schedules).length > 0">
+                    <h4 class="text-lg font-medium text-gray-900 mb-4">
+                        Lista Detallada de Horarios
+                    </h4>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
+                                        Curso
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
+                                        Día
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
+                                        Horario
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
+                                        Profesor
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
+                                        Aula
+                                    </th>
+                                    <th
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
+                                        Acciones
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr
+                                    v-for="schedule in allSchedules"
+                                    :key="schedule.id"
+                                >
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div
+                                                class="w-3 h-3 rounded-full mr-3"
+                                                :style="{
+                                                    backgroundColor:
+                                                        schedule.course.color,
+                                                }"
+                                            ></div>
+                                            <div
+                                                class="text-sm font-medium text-gray-900"
+                                            >
+                                                {{ schedule.course.name }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td
+                                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                                    >
+                                        {{ getDayName(schedule.day) }}
+                                    </td>
+                                    <td
+                                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                                    >
+                                        {{ formatTime(schedule.start_time) }} -
+                                        {{ formatTime(schedule.end_time) }}
+                                    </td>
+                                    <td
+                                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                                    >
+                                        {{ schedule.teacher.first_name }}
+                                        {{ schedule.teacher.last_name }}
+                                    </td>
+                                    <td
+                                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                                    >
+                                        {{ schedule.room || "No asignada" }}
+                                    </td>
+                                    <td
+                                        class="px-6 py-4 whitespace-nowrap text-sm font-medium"
+                                    >
+                                        <button
+                                            class="text-indigo-600 hover:text-indigo-900 mr-3"
+                                        >
+                                            Editar
+                                        </button>
+                                        <button
+                                            class="text-red-600 hover:text-red-900"
+                                        >
+                                            Eliminar
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <div
                     v-else-if="selectedGrade"
                     class="text-center text-gray-500 py-8"
@@ -282,7 +410,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from "vue";
+import { ref, reactive, computed } from "vue";
 import { router } from "@inertiajs/vue3";
 
 // Props
@@ -327,22 +455,62 @@ const createSchedule = async () => {
         // Emitir evento para refrescar datos
         emit("schedule-created");
 
+        // Recargar horarios si hay un grado seleccionado
+        if (selectedGrade.value) {
+            await loadSchedules();
+        }
+
         // Mostrar mensaje de éxito (Laravel maneja esto automáticamente)
     } catch (error) {
         console.error("Error creating schedule:", error);
     }
 };
 
-const loadSchedules = () => {
+const loadSchedules = async () => {
     if (!selectedGrade.value) {
         schedules.value = [];
         return;
     }
 
-    // Simular carga de horarios (aquí se haría la llamada a la API)
-    schedules.value = [];
+    try {
+        // Hacer petición a la API para obtener horarios del grado seleccionado
+        const response = await fetch(
+            `/schedule-management/grades/${selectedGrade.value}/schedules`
+        );
+        const data = await response.json();
+
+        // Convertir los datos agrupados por día en el formato esperado
+        schedules.value = data;
+    } catch (error) {
+        console.error("Error loading schedules:", error);
+        schedules.value = [];
+    }
 };
 
+// Computed properties
+const totalClasses = computed(() => {
+    return Object.values(schedules.value).flat().length;
+});
+
+const uniqueCourses = computed(() => {
+    const courses = Object.values(schedules.value)
+        .flat()
+        .map((schedule) => schedule.course.id);
+    return [...new Set(courses)].length;
+});
+
+const uniqueTeachers = computed(() => {
+    const teachers = Object.values(schedules.value)
+        .flat()
+        .map((schedule) => schedule.teacher.id);
+    return [...new Set(teachers)].length;
+});
+
+const allSchedules = computed(() => {
+    return Object.values(schedules.value).flat();
+});
+
+// Methods
 const getDayName = (day) => {
     const days = {
         monday: "Lunes",
@@ -352,5 +520,9 @@ const getDayName = (day) => {
         friday: "Viernes",
     };
     return days[day] || day;
+};
+
+const formatTime = (time) => {
+    return time.substring(0, 5); // HH:MM
 };
 </script>
