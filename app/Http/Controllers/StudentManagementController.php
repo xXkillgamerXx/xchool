@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Grade;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -22,7 +23,7 @@ class StudentManagementController extends Controller
             abort(403, 'Acceso denegado. Solo los colegios pueden gestionar estudiantes.');
         }
 
-        $students = User::with(['role', 'parent'])
+        $students = User::with(['role', 'parent', 'grade'])
             ->whereHas('role', function($query) {
                 $query->where('name', 'estudiante');
             })
@@ -34,9 +35,12 @@ class StudentManagementController extends Controller
             })
             ->get();
 
+        $grades = Grade::active()->get();
+
         return Inertia::render('StudentManagement/Index', [
             'students' => $students,
             'parents' => $parents,
+            'grades' => $grades,
         ]);
     }
 
@@ -171,6 +175,44 @@ class StudentManagementController extends Controller
             });
 
         return response()->json($parents);
+    }
+
+    /**
+     * Assign student to a grade.
+     */
+    public function assignToGrade(Request $request, User $student)
+    {
+        // Verificar que el usuario sea colegio
+        if (!$request->user()->isColegio()) {
+            abort(403, 'Acceso denegado.');
+        }
+
+        $request->validate([
+            'grade_id' => 'required|exists:grades,id',
+        ]);
+
+        $student->update([
+            'grade_id' => $request->grade_id
+        ]);
+
+        return redirect()->back()->with('success', 'Estudiante asignado al grado exitosamente.');
+    }
+
+    /**
+     * Remove student from grade.
+     */
+    public function removeFromGrade(User $student)
+    {
+        // Verificar que el usuario sea colegio
+        if (!auth()->user()->isColegio()) {
+            abort(403, 'Acceso denegado.');
+        }
+
+        $student->update([
+            'grade_id' => null
+        ]);
+
+        return redirect()->back()->with('success', 'Estudiante removido del grado exitosamente.');
     }
 
     /**

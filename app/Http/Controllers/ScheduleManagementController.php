@@ -407,8 +407,8 @@ class ScheduleManagementController extends Controller
     {
         $user = $request->user();
         
-        // Obtener el hijo del padre (asumiendo que hay una relación padre-hijo)
-        $child = $user->child; // Necesitaremos crear esta relación en el modelo User
+        // Obtener el primer hijo del padre
+        $child = $user->students()->first();
         
         if (!$child) {
             $message = "No tienes un hijo asignado en el sistema.";
@@ -434,7 +434,7 @@ class ScheduleManagementController extends Controller
     public function parentChildSchedule(Request $request)
     {
         $user = $request->user();
-        $child = $user->child;
+        $child = $user->students()->first();
         
         if (!$child) {
             $message = "No tienes un hijo asignado en el sistema.";
@@ -501,7 +501,7 @@ class ScheduleManagementController extends Controller
     public function parentChildTeachers(Request $request)
     {
         $user = $request->user();
-        $child = $user->child;
+        $child = $user->students()->first();
         
         if (!$child) {
             $message = "No tienes un hijo asignado en el sistema.";
@@ -593,7 +593,7 @@ class ScheduleManagementController extends Controller
     public function parentChildAttendance(Request $request)
     {
         $user = $request->user();
-        $child = $user->child;
+        $child = $user->students()->first();
         
         if (!$child) {
             $message = "No tienes un hijo asignado en el sistema.";
@@ -636,7 +636,7 @@ class ScheduleManagementController extends Controller
     public function parentChildGrades(Request $request)
     {
         $user = $request->user();
-        $child = $user->child;
+        $child = $user->students()->first();
         
         if (!$child) {
             $message = "No tienes un hijo asignado en el sistema.";
@@ -701,7 +701,7 @@ class ScheduleManagementController extends Controller
     public function parentChildReports(Request $request)
     {
         $user = $request->user();
-        $child = $user->child;
+        $child = $user->students()->first();
         
         if (!$child) {
             $message = "No tienes un hijo asignado en el sistema.";

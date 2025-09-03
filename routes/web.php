@@ -52,6 +52,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:colegio')->group(function () {
         Route::resource('students', StudentManagementController::class)->except(['show']);
         Route::get('/students/search-parents', [StudentManagementController::class, 'searchParents'])->name('students.search-parents');
+        Route::post('/students/{student}/assign-grade', [StudentManagementController::class, 'assignToGrade'])->name('students.assign-grade');
+        Route::delete('/students/{student}/remove-grade', [StudentManagementController::class, 'removeFromGrade'])->name('students.remove-grade');
     });
 
     // Rutas del historial de actividades (solo colegios)

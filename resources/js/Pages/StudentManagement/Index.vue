@@ -227,6 +227,11 @@
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                 >
+                                    Grado
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                >
                                     Fecha de Nacimiento
                                 </th>
                                 <th
@@ -310,6 +315,27 @@
                                         >Sin asignar</span
                                     >
                                 </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div
+                                        v-if="student.grade"
+                                        class="flex items-center"
+                                    >
+                                        <span
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                        >
+                                            {{ student.grade.name }}
+                                            {{
+                                                student.grade.section
+                                                    ? "-" +
+                                                      student.grade.section
+                                                    : ""
+                                            }}
+                                        </span>
+                                    </div>
+                                    <span v-else class="text-gray-400"
+                                        >Sin asignar</span
+                                    >
+                                </td>
                                 <td
                                     class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                                 >
@@ -329,6 +355,23 @@
                                         class="text-indigo-600 hover:text-indigo-900 transition-colors"
                                     >
                                         Editar
+                                    </button>
+                                    <button
+                                        @click="assignGrade(student)"
+                                        class="text-green-600 hover:text-green-900 transition-colors"
+                                    >
+                                        {{
+                                            student.grade
+                                                ? "Cambiar Grado"
+                                                : "Asignar Grado"
+                                        }}
+                                    </button>
+                                    <button
+                                        v-if="student.grade"
+                                        @click="removeFromGrade(student)"
+                                        class="text-orange-600 hover:text-orange-900 transition-colors"
+                                    >
+                                        Quitar Grado
                                     </button>
                                     <button
                                         @click="confirmDeleteStudent(student)"
@@ -601,6 +644,84 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal para asignar grado -->
+        <div
+            v-if="showAssignGradeModal"
+            class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+        >
+            <div
+                class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
+            >
+                <div class="mt-3">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">
+                        {{
+                            studentToAssignGrade?.grade
+                                ? "Cambiar Grado"
+                                : "Asignar Grado"
+                        }}
+                    </h3>
+                    <p class="text-sm text-gray-600 mb-4">
+                        Estudiante:
+                        <strong
+                            >{{ studentToAssignGrade?.first_name }}
+                            {{ studentToAssignGrade?.last_name }}</strong
+                        >
+                    </p>
+
+                    <form
+                        @submit.prevent="confirmAssignGrade"
+                        class="space-y-4"
+                    >
+                        <div>
+                            <label
+                                class="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                                Seleccionar Grado
+                            </label>
+                            <select
+                                v-model="assignGradeForm.grade_id"
+                                required
+                                class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                            >
+                                <option value="">Selecciona un grado</option>
+                                <option
+                                    v-for="grade in grades"
+                                    :key="grade.id"
+                                    :value="grade.id"
+                                >
+                                    {{ grade.name }}
+                                    {{
+                                        grade.section ? "-" + grade.section : ""
+                                    }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="flex justify-end space-x-3">
+                            <button
+                                type="button"
+                                @click="cancelAssignGrade"
+                                class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="submit"
+                                :disabled="assignGradeForm.processing"
+                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50 transition-colors"
+                            >
+                                {{
+                                    assignGradeForm.processing
+                                        ? "Asignando..."
+                                        : "Asignar Grado"
+                                }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </AdminLayout>
 </template>
 
@@ -612,6 +733,7 @@ import AdminLayout from "@/Layouts/AdminLayout.vue";
 const props = defineProps({
     students: Array,
     parents: Array,
+    grades: Array,
 });
 
 // Estados reactivos
@@ -619,10 +741,12 @@ const showCreateForm = ref(false);
 const showParentModal = ref(false);
 const showEditStudentModal = ref(false);
 const showDeleteStudentModal = ref(false);
+const showAssignGradeModal = ref(false);
 const parentSearch = ref("");
 const selectedParent = ref({});
 const studentToEdit = ref(null);
 const studentToDelete = ref(null);
+const studentToAssignGrade = ref(null);
 
 // Formularios
 const form = useForm({
@@ -641,6 +765,10 @@ const editStudentForm = useForm({
     parent_id: "",
     birth_date: "",
     gender: "",
+});
+
+const assignGradeForm = useForm({
+    grade_id: "",
 });
 
 // Validación de email
@@ -750,6 +878,47 @@ const deleteStudentConfirmed = () => {
 const cancelDeleteStudent = () => {
     showDeleteStudentModal.value = false;
     studentToDelete.value = null;
+};
+
+const assignGrade = (student) => {
+    studentToAssignGrade.value = student;
+    assignGradeForm.grade_id = student.grade_id || "";
+    showAssignGradeModal.value = true;
+};
+
+const confirmAssignGrade = () => {
+    if (studentToAssignGrade.value) {
+        assignGradeForm.post(
+            route("students.assign-grade", studentToAssignGrade.value.id),
+            {
+                onSuccess: () => {
+                    showAssignGradeModal.value = false;
+                    studentToAssignGrade.value = null;
+                    assignGradeForm.reset();
+                },
+            }
+        );
+    }
+};
+
+const removeFromGrade = (student) => {
+    if (
+        confirm(
+            `¿Está seguro de que desea quitar a ${student.first_name} ${student.last_name} del grado?`
+        )
+    ) {
+        useForm().delete(route("students.remove-grade", student.id), {
+            onSuccess: () => {
+                // La página se actualizará automáticamente
+            },
+        });
+    }
+};
+
+const cancelAssignGrade = () => {
+    showAssignGradeModal.value = false;
+    studentToAssignGrade.value = null;
+    assignGradeForm.reset();
 };
 
 const getInitials = (firstName, lastName) => {
