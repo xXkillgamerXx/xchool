@@ -190,6 +190,30 @@ class UserManagementController extends Controller
     }
 
     /**
+     * Send credentials to existing user.
+     */
+    public function sendCredentials(Request $request, User $user)
+    {
+        // Verificar que el usuario sea colegio
+        if (!$request->user()->isColegio()) {
+            abort(403, 'Acceso denegado.');
+        }
+
+        // Generar una nueva contraseña temporal
+        $temporaryPassword = Str::random(12);
+        
+        // Actualizar la contraseña del usuario
+        $user->update([
+            'password' => Hash::make($temporaryPassword)
+        ]);
+
+        // Enviar las credenciales por correo
+        $this->sendCredentialsEmail($user, $temporaryPassword);
+
+        return redirect()->back()->with('success', "Credenciales enviadas exitosamente a {$user->email}");
+    }
+
+    /**
      * Delete a user.
      */
     public function deleteUser(Request $request, User $user)

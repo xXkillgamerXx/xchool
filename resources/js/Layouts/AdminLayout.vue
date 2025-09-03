@@ -259,19 +259,14 @@
                         </p>
                     </div>
                 </div>
-                <form method="POST" action="/logout" class="mt-3">
-                    <input
-                        type="hidden"
-                        name="_token"
-                        :value="$page.props.csrf_token"
-                    />
-                    <button
-                        type="submit"
-                        class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                    >
-                        Cerrar Sesión
-                    </button>
-                </form>
+                <Link
+                    :href="route('logout')"
+                    method="post"
+                    as="button"
+                    class="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                >
+                    Cerrar Sesión
+                </Link>
             </div>
         </div>
 

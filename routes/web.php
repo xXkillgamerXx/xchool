@@ -30,6 +30,8 @@ Route::middleware(['auth', 'verified', 'role:colegio'])->group(function () {
         ->name('user-management.index');
     Route::post('/user-management/invite', [UserManagementController::class, 'sendInvitation'])
         ->name('user-management.invite');
+    Route::post('/user-management/user/{user}/send-credentials', [UserManagementController::class, 'sendCredentials'])
+        ->name('user-management.send-credentials');
     Route::delete('/user-management/invitation/{invitation}', [UserManagementController::class, 'deleteInvitation'])
         ->name('user-management.delete-invitation');
     Route::delete('/user-management/user/{user}', [UserManagementController::class, 'deleteUser'])
