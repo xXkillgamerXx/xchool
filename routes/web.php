@@ -64,44 +64,54 @@ Route::middleware('auth')->group(function () {
     Route::get('/schedule-management', [ScheduleManagementController::class, 'index'])
         ->middleware('role:colegio')
         ->name('schedule-management.index');
-    
+
     Route::get('/my-schedules', [ScheduleManagementController::class, 'index'])
         ->middleware('role:profesor')
         ->name('my-schedules.index');
-    
+
     // Solo colegios pueden crear/editar/eliminar
     Route::middleware('role:colegio')->group(function () {
         Route::post('/schedule-management/grades', [ScheduleManagementController::class, 'storeGrade'])->name('schedule-management.grades.store');
         Route::put('/schedule-management/grades/{grade}', [ScheduleManagementController::class, 'updateGrade'])->name('schedule-management.grades.update');
         Route::delete('/schedule-management/grades/{grade}', [ScheduleManagementController::class, 'destroyGrade'])->name('schedule-management.grades.destroy');
-        
+
         Route::post('/schedule-management/courses', [ScheduleManagementController::class, 'storeCourse'])->name('schedule-management.courses.store');
         Route::put('/schedule-management/courses/{course}', [ScheduleManagementController::class, 'updateCourse'])->name('schedule-management.courses.update');
         Route::delete('/schedule-management/courses/{course}', [ScheduleManagementController::class, 'destroyCourse'])->name('schedule-management.courses.destroy');
-        
+
         Route::post('/schedule-management/schedules', [ScheduleManagementController::class, 'storeSchedule'])->name('schedule-management.schedules.store');
         Route::put('/schedule-management/schedules/{schedule}', [ScheduleManagementController::class, 'updateSchedule'])->name('schedule-management.schedules.update');
         Route::delete('/schedule-management/schedules/{schedule}', [ScheduleManagementController::class, 'destroySchedule'])->name('schedule-management.schedules.destroy');
     });
-    
+
     // Rutas para obtener horarios (colegios y profesores)
     Route::get('/schedule-management/grades/{grade}/schedules', [ScheduleManagementController::class, 'getSchedulesByGrade'])
         ->middleware('role:colegio,profesor')
         ->name('schedule-management.grades.schedules');
-        
+
     Route::get('/schedule-management/teachers/{teacher}/schedules', [ScheduleManagementController::class, 'getSchedulesByTeacher'])
         ->middleware('role:colegio,profesor')
         ->name('schedule-management.teachers.schedules');
-        
+
     Route::get('/schedule-management/students/{student}/schedules', [ScheduleManagementController::class, 'getSchedulesByStudent'])
         ->middleware('role:colegio,profesor')
         ->name('schedule-management.students.schedules');
-    
+
     // Rutas específicas para estudiantes
     Route::middleware('role:estudiante')->group(function () {
         Route::get('/student/schedule', [ScheduleManagementController::class, 'studentSchedule'])->name('student.schedule');
         Route::get('/student/courses', [ScheduleManagementController::class, 'studentCourses'])->name('student.courses');
         Route::get('/student/teachers', [ScheduleManagementController::class, 'studentTeachers'])->name('student.teachers');
+    });
+
+    // Rutas específicas para padres
+    Route::middleware('role:padre')->group(function () {
+        Route::get('/parent/child', [ScheduleManagementController::class, 'parentChild'])->name('parent.child');
+        Route::get('/parent/child/schedule', [ScheduleManagementController::class, 'parentChildSchedule'])->name('parent.child.schedule');
+        Route::get('/parent/child/teachers', [ScheduleManagementController::class, 'parentChildTeachers'])->name('parent.child.teachers');
+        Route::get('/parent/child/attendance', [ScheduleManagementController::class, 'parentChildAttendance'])->name('parent.child.attendance');
+        Route::get('/parent/child/grades', [ScheduleManagementController::class, 'parentChildGrades'])->name('parent.child.grades');
+        Route::get('/parent/child/reports', [ScheduleManagementController::class, 'parentChildReports'])->name('parent.child.reports');
     });
 });
 
