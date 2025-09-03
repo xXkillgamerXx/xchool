@@ -26,14 +26,56 @@ class UserManagementController extends Controller
             abort(403, 'Acceso denegado. Solo los colegios pueden gestionar usuarios.');
         }
 
-        $users = User::with('role')->get();
+        // Obtener filtros de la request
+        $search = $request->get('search', '');
+        $role = $request->get('role', '');
+        $sort = $request->get('sort', 'name');
+        $direction = $request->get('direction', 'asc');
+
+        // Construir query para usuarios con filtros y paginación
+        $usersQuery = User::with('role');
+
+        // Aplicar filtro de búsqueda
+        if ($search) {
+            $usersQuery->where(function ($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('first_name', 'like', "%{$search}%")
+                      ->orWhere('last_name', 'like', "%{$search}%");
+            });
+        }
+
+        // Aplicar filtro por rol
+        if ($role) {
+            $usersQuery->where('role_id', $role);
+        }
+
+        // Aplicar ordenamiento
+        $allowedSorts = ['name', 'email', 'role_id', 'created_at'];
+        $allowedDirections = ['asc', 'desc'];
+        
+        if (in_array($sort, $allowedSorts) && in_array($direction, $allowedDirections)) {
+            $usersQuery->orderBy($sort, $direction);
+        } else {
+            $usersQuery->orderBy('name', 'asc');
+        }
+
+        // Paginar resultados
+        $users = $usersQuery->paginate(15)->withQueryString();
+
         $invitations = Invitation::with('role')->where('status', 'pending')->get();
-        $roles = Role::whereIn('name', ['profesor', 'padre'])->get();
+        $roles = Role::whereIn('name', ['profesor', 'padre', 'estudiante'])->get();
 
         return Inertia::render('UserManagement/Index', [
             'users' => $users,
             'invitations' => $invitations,
             'roles' => $roles,
+            'filters' => [
+                'search' => $search,
+                'role' => $role,
+                'sort' => $sort,
+                'direction' => $direction,
+            ],
         ]);
     }
 
@@ -51,6 +93,12 @@ class UserManagementController extends Controller
             'email' => 'required|email|unique:users,email|unique:invitations,email',
             'role_id' => 'required|exists:roles,id',
         ]);
+
+        // Verificar que el rol sea válido para invitaciones
+        $role = Role::find($request->role_id);
+        if (!in_array($role->name, ['profesor', 'padre', 'estudiante'])) {
+            return redirect()->back()->withErrors(['role_id' => 'Rol no válido para invitaciones.']);
+        }
 
         // Obtener el rol para generar el nombre de usuario
         $role = Role::find($request->role_id);

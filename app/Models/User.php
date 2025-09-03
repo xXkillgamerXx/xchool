@@ -271,4 +271,34 @@ class User extends Authenticatable
     {
         return $this->attendances()->where('schedule_id', $scheduleId);
     }
+
+    /**
+     * Relación con las calificaciones como profesor
+     */
+    public function teacherGrades()
+    {
+        return $this->hasMany(StudentGrade::class, 'teacher_id');
+    }
+
+    /**
+     * Obtener calificaciones de un estudiante para un curso específico
+     */
+    public function gradesForCourse($courseId)
+    {
+        return $this->studentGrades()->where('course_id', $courseId);
+    }
+
+    /**
+     * Obtener el promedio de un estudiante en un curso
+     */
+    public function getAverageForCourse($courseId)
+    {
+        $grades = $this->gradesForCourse($courseId)->get();
+        if ($grades->isEmpty()) return 0;
+        
+        $totalScore = $grades->sum('score');
+        $totalMaxScore = $grades->sum('max_score');
+        
+        return $totalMaxScore > 0 ? round(($totalScore / $totalMaxScore) * 100, 2) : 0;
+    }
 }

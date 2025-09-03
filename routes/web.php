@@ -125,6 +125,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/attendance/student/{student}/history', [App\Http\Controllers\AttendanceController::class, 'studentHistory'])->name('attendance.student.history');
         Route::get('/attendance/statistics', [App\Http\Controllers\AttendanceController::class, 'statistics'])->name('attendance.statistics');
     });
+
+    // ==================== RUTAS DE CALIFICACIONES ====================
+    Route::middleware('role:profesor')->group(function () {
+        Route::get('/grades', [App\Http\Controllers\GradeController::class, 'index'])->name('grades.index');
+        Route::get('/grades/create', [App\Http\Controllers\GradeController::class, 'create'])->name('grades.create');
+        Route::post('/grades', [App\Http\Controllers\GradeController::class, 'store'])->name('grades.store');
+        Route::get('/grades/students/{gradeId}', [App\Http\Controllers\GradeController::class, 'getStudents'])->name('grades.students');
+        Route::get('/grades/student/{student}', [App\Http\Controllers\GradeController::class, 'studentGrades'])->name('grades.student');
+        Route::get('/grades/statistics', [App\Http\Controllers\GradeController::class, 'statistics'])->name('grades.statistics');
+    });
 });
 
 // Habilitar solo las rutas de autenticación necesarias (login, logout, etc.)

@@ -212,6 +212,33 @@
                         Registro de Asistencia
                     </Link>
 
+                    <!-- Gestión de Calificaciones (Solo Profesores) -->
+                    <Link
+                        v-if="user.role && user.role.name === 'profesor'"
+                        :href="route('grades.index')"
+                        :class="[
+                            'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                            route().current('grades.*')
+                                ? 'bg-indigo-100 text-indigo-700'
+                                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900',
+                        ]"
+                    >
+                        <svg
+                            class="w-5 h-5 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            ></path>
+                        </svg>
+                        Gestión de Calificaciones
+                    </Link>
+
                     <!-- Mi Horario (Solo Estudiantes) -->
                     <Link
                         v-if="user.role && user.role.name === 'estudiante'"
