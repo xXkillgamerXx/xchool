@@ -91,13 +91,28 @@ class DashboardController extends Controller
                 break;
             
             case 'estudiante':
+                $grade = $user->grade;
+                $schedules = $grade ? \App\Models\Schedule::where('grade_id', $grade->id)->active()->get() : collect();
+                
                 $dashboardData['stats'] = [
-                    'cursos_inscritos' => 0, // TODO: Implementar cuando tengamos cursos
-                    'notas_promedio' => 'N/A',
+                    'grado_asignado' => $grade ? $grade->name : 'Sin asignar',
+                    'cursos_inscritos' => $schedules->pluck('course_id')->unique()->count(),
+                    'total_clases' => $schedules->count(),
+                    'profesores' => $schedules->pluck('teacher_id')->unique()->count(),
                 ];
+                $dashboardData['grade'] = $grade;
+                $dashboardData['upcoming_classes'] = $schedules->take(3)->map(function($schedule) {
+                    return [
+                        'course' => $schedule->course->name,
+                        'teacher' => $schedule->teacher->name,
+                        'day' => $schedule->day,
+                        'time' => $schedule->start_time . ' - ' . $schedule->end_time,
+                    ];
+                });
                 $dashboardData['recent_activities'] = [
+                    'Ver mi horario',
                     'Ver mis cursos',
-                    'Ver mis notas',
+                    'Ver mis profesores',
                 ];
                 break;
             

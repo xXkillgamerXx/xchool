@@ -285,4 +285,116 @@ class ScheduleManagementController extends Controller
 
         return response()->json($schedules);
     }
+
+    /**
+     * Mostrar horario del estudiante
+     */
+    public function studentSchedule(Request $request)
+    {
+        $user = $request->user();
+        
+        // Obtener el grado del estudiante
+        $grade = $user->grade;
+        
+        if (!$grade) {
+            return Inertia::render('Student/Schedule', [
+                'schedules' => collect(),
+                'grade' => null,
+                'message' => 'No tienes un grado asignado. Contacta al administrador.'
+            ]);
+        }
+
+        // Obtener horarios del grado del estudiante
+        $schedules = Schedule::where('grade_id', $grade->id)
+            ->with(['course', 'teacher'])
+            ->active()
+            ->orderBy('day')
+            ->orderBy('start_time')
+            ->get()
+            ->groupBy('day');
+
+        return Inertia::render('Student/Schedule', [
+            'schedules' => $schedules,
+            'grade' => $grade,
+            'user' => $user
+        ]);
+    }
+
+    /**
+     * Mostrar cursos del estudiante
+     */
+    public function studentCourses(Request $request)
+    {
+        $user = $request->user();
+        $grade = $user->grade;
+        
+        if (!$grade) {
+            return Inertia::render('Student/Courses', [
+                'courses' => collect(),
+                'grade' => null,
+                'message' => 'No tienes un grado asignado. Contacta al administrador.'
+            ]);
+        }
+
+        // Obtener cursos únicos del grado del estudiante
+        $courses = Schedule::where('grade_id', $grade->id)
+            ->with(['course', 'teacher'])
+            ->active()
+            ->get()
+            ->groupBy('course_id')
+            ->map(function ($schedules) {
+                $firstSchedule = $schedules->first();
+                return [
+                    'course' => $firstSchedule->course,
+                    'teacher' => $firstSchedule->teacher,
+                    'total_hours' => $schedules->count(),
+                    'schedules' => $schedules
+                ];
+            });
+
+        return Inertia::render('Student/Courses', [
+            'courses' => $courses,
+            'grade' => $grade,
+            'user' => $user
+        ]);
+    }
+
+    /**
+     * Mostrar profesores del estudiante
+     */
+    public function studentTeachers(Request $request)
+    {
+        $user = $request->user();
+        $grade = $user->grade;
+        
+        if (!$grade) {
+            return Inertia::render('Student/Teachers', [
+                'teachers' => collect(),
+                'grade' => null,
+                'message' => 'No tienes un grado asignado. Contacta al administrador.'
+            ]);
+        }
+
+        // Obtener profesores únicos del grado del estudiante
+        $teachers = Schedule::where('grade_id', $grade->id)
+            ->with(['teacher', 'course'])
+            ->active()
+            ->get()
+            ->groupBy('teacher_id')
+            ->map(function ($schedules) {
+                $firstSchedule = $schedules->first();
+                return [
+                    'teacher' => $firstSchedule->teacher,
+                    'courses' => $schedules->pluck('course')->unique('id'),
+                    'total_classes' => $schedules->count(),
+                    'schedules' => $schedules
+                ];
+            });
+
+        return Inertia::render('Student/Teachers', [
+            'teachers' => $teachers,
+            'grade' => $grade,
+            'user' => $user
+        ]);
+    }
 }

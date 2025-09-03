@@ -96,6 +96,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/schedule-management/students/{student}/schedules', [ScheduleManagementController::class, 'getSchedulesByStudent'])
         ->middleware('role:colegio,profesor')
         ->name('schedule-management.students.schedules');
+    
+    // Rutas específicas para estudiantes
+    Route::middleware('role:estudiante')->group(function () {
+        Route::get('/student/schedule', [ScheduleManagementController::class, 'studentSchedule'])->name('student.schedule');
+        Route::get('/student/courses', [ScheduleManagementController::class, 'studentCourses'])->name('student.courses');
+        Route::get('/student/teachers', [ScheduleManagementController::class, 'studentTeachers'])->name('student.teachers');
+    });
 });
 
 // Habilitar solo las rutas de autenticación necesarias (login, logout, etc.)
