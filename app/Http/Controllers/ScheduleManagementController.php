@@ -66,10 +66,42 @@ class ScheduleManagementController extends Controller
                 ->unique('id')
                 ->values();
 
+            // Obtener estudiantes por grado que enseña el profesor
+            $studentsByGrade = [];
+            foreach ($myGrades as $grade) {
+                $students = User::whereHas('role', function($query) {
+                    $query->where('name', 'estudiante');
+                })
+                ->where('grade_id', $grade->id)
+                ->with(['parent'])
+                ->get()
+                ->map(function($student) {
+                    return [
+                        'id' => $student->id,
+                        'name' => $student->name,
+                        'first_name' => $student->first_name,
+                        'last_name' => $student->last_name,
+                        'email' => $student->email,
+                        'parent' => $student->parent ? [
+                            'id' => $student->parent->id,
+                            'name' => $student->parent->name,
+                            'email' => $student->parent->email,
+                        ] : null,
+                    ];
+                });
+
+                $studentsByGrade[$grade->id] = [
+                    'grade' => $grade,
+                    'students' => $students,
+                    'total_students' => $students->count(),
+                ];
+            }
+
             return Inertia::render('ScheduleManagement/TeacherView', [
                 'mySchedules' => $mySchedules,
                 'myGrades' => $myGrades,
                 'myCourses' => $myCourses,
+                'studentsByGrade' => $studentsByGrade,
                 'userRole' => 'profesor',
                 'teacher' => $user,
             ]);

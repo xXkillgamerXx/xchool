@@ -267,6 +267,173 @@
                     </table>
                 </div>
             </div>
+
+            <!-- Lista de Estudiantes por Grado -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-medium text-gray-900">
+                        Mis Estudiantes por Grado
+                    </h2>
+                    <p class="text-sm text-gray-600 mt-1">
+                        Lista de estudiantes en cada grado que enseño
+                    </p>
+                </div>
+                <div class="p-6">
+                    <div
+                        v-if="Object.keys(studentsByGrade).length === 0"
+                        class="text-center text-gray-500 py-8"
+                    >
+                        <svg
+                            class="mx-auto h-12 w-12 text-gray-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+                            />
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">
+                            No hay estudiantes asignados
+                        </h3>
+                        <p class="mt-1 text-sm text-gray-500">
+                            Los grados que enseñas aún no tienen estudiantes.
+                        </p>
+                    </div>
+
+                    <div v-else class="space-y-6">
+                        <div
+                            v-for="(gradeData, gradeId) in studentsByGrade"
+                            :key="gradeId"
+                            class="border border-gray-200 rounded-lg"
+                        >
+                            <!-- Header del grado -->
+                            <div
+                                class="bg-gray-50 px-4 py-3 border-b border-gray-200"
+                            >
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h3
+                                            class="text-lg font-medium text-gray-900"
+                                        >
+                                            {{ gradeData.grade.name }}
+                                            <span
+                                                v-if="gradeData.grade.section"
+                                                class="text-gray-500"
+                                            >
+                                                - {{ gradeData.grade.section }}
+                                            </span>
+                                        </h3>
+                                        <p class="text-sm text-gray-600">
+                                            {{
+                                                gradeData.total_students
+                                            }}
+                                            estudiantes
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <span
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                        >
+                                            {{
+                                                gradeData.total_students
+                                            }}
+                                            estudiantes
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Lista de estudiantes -->
+                            <div class="p-4">
+                                <div
+                                    v-if="gradeData.students.length === 0"
+                                    class="text-center text-gray-500 py-4"
+                                >
+                                    <p>No hay estudiantes en este grado</p>
+                                </div>
+                                <div
+                                    v-else
+                                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                                >
+                                    <div
+                                        v-for="student in gradeData.students"
+                                        :key="student.id"
+                                        class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                                    >
+                                        <div class="flex items-start space-x-3">
+                                            <!-- Avatar del estudiante -->
+                                            <div class="flex-shrink-0">
+                                                <div
+                                                    class="h-10 w-10 bg-indigo-100 rounded-full flex items-center justify-center"
+                                                >
+                                                    <span
+                                                        class="text-indigo-600 font-medium text-sm"
+                                                    >
+                                                        {{
+                                                            getInitials(
+                                                                student.name
+                                                            )
+                                                        }}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Información del estudiante -->
+                                            <div class="flex-1 min-w-0">
+                                                <h4
+                                                    class="text-sm font-medium text-gray-900 truncate"
+                                                >
+                                                    {{ student.name }}
+                                                </h4>
+                                                <p
+                                                    class="text-xs text-gray-500 truncate"
+                                                >
+                                                    {{ student.email }}
+                                                </p>
+                                                <div
+                                                    v-if="student.parent"
+                                                    class="mt-2"
+                                                >
+                                                    <p
+                                                        class="text-xs text-gray-400"
+                                                    >
+                                                        Padre/Madre:
+                                                    </p>
+                                                    <p
+                                                        class="text-xs text-gray-600 truncate"
+                                                    >
+                                                        {{
+                                                            student.parent.name
+                                                        }}
+                                                    </p>
+                                                    <p
+                                                        class="text-xs text-gray-500 truncate"
+                                                    >
+                                                        {{
+                                                            student.parent.email
+                                                        }}
+                                                    </p>
+                                                </div>
+                                                <div v-else class="mt-2">
+                                                    <span
+                                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800"
+                                                    >
+                                                        Sin padre asignado
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </AdminLayout>
 </template>
@@ -280,6 +447,7 @@ const props = defineProps({
     mySchedules: Object,
     myGrades: Array,
     myCourses: Array,
+    studentsByGrade: Object,
     userRole: String,
     teacher: Object,
 });
@@ -319,5 +487,14 @@ const getDayName = (day) => {
 
 const formatTime = (time) => {
     return time.substring(0, 5); // HH:MM
+};
+
+const getInitials = (name) => {
+    if (!name) return "E";
+    const names = name.split(" ");
+    if (names.length >= 2) {
+        return (names[0][0] + names[1][0]).toUpperCase();
+    }
+    return names[0][0].toUpperCase();
 };
 </script>

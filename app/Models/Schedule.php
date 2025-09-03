@@ -43,6 +43,11 @@ class Schedule extends Model
         return $this->belongsTo(User::class, 'teacher_id');
     }
 
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
     // Scopes
     public function scopeActive($query)
     {

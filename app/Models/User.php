@@ -239,4 +239,36 @@ class User extends Authenticatable
 
         return null;
     }
+
+    /**
+     * Relación con las asistencias como estudiante
+     */
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class, 'student_id');
+    }
+
+    /**
+     * Relación con las asistencias como profesor
+     */
+    public function teacherAttendances()
+    {
+        return $this->hasMany(Attendance::class, 'teacher_id');
+    }
+
+    /**
+     * Obtener asistencias de un estudiante para una fecha específica
+     */
+    public function attendancesForDate($date)
+    {
+        return $this->attendances()->where('attendance_date', $date);
+    }
+
+    /**
+     * Obtener asistencias de un estudiante para un horario específico
+     */
+    public function attendancesForSchedule($scheduleId)
+    {
+        return $this->attendances()->where('schedule_id', $scheduleId);
+    }
 }

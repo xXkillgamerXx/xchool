@@ -116,6 +116,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/parent/child/grades', [ScheduleManagementController::class, 'parentChildGrades'])->name('parent.child.grades');
         Route::get('/parent/child/reports', [ScheduleManagementController::class, 'parentChildReports'])->name('parent.child.reports');
     });
+
+    // ==================== RUTAS DE ASISTENCIA ====================
+    Route::middleware('role:profesor')->group(function () {
+        Route::get('/attendance', [App\Http\Controllers\AttendanceController::class, 'index'])->name('attendance.index');
+        Route::get('/attendance/create/{schedule}', [App\Http\Controllers\AttendanceController::class, 'create'])->name('attendance.create');
+        Route::post('/attendance', [App\Http\Controllers\AttendanceController::class, 'store'])->name('attendance.store');
+        Route::get('/attendance/student/{student}/history', [App\Http\Controllers\AttendanceController::class, 'studentHistory'])->name('attendance.student.history');
+        Route::get('/attendance/statistics', [App\Http\Controllers\AttendanceController::class, 'statistics'])->name('attendance.statistics');
+    });
 });
 
 // Habilitar solo las rutas de autenticación necesarias (login, logout, etc.)
