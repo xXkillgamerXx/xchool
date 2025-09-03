@@ -13,188 +13,18 @@
                 </p>
             </div>
 
-            <!-- Formulario para crear estudiantes -->
+            <!-- Botón para crear estudiantes -->
             <div class="bg-white shadow rounded-lg p-6">
-                <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center justify-between">
                     <h3 class="text-lg font-medium text-gray-900">
-                        Crear Nuevo Estudiante
+                        Gestión de Estudiantes
                     </h3>
                     <button
-                        @click="showCreateForm = !showCreateForm"
+                        @click="showCreateStudentModal = true"
                         class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors"
                     >
-                        {{ showCreateForm ? "Cancelar" : "Crear Estudiante" }}
+                        Crear Estudiante
                     </button>
-                </div>
-
-                <!-- Formulario de creación -->
-                <div v-if="showCreateForm" class="space-y-4">
-                    <form @submit.prevent="submitForm" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Nombre</label
-                                >
-                                <input
-                                    v-model="form.first_name"
-                                    type="text"
-                                    required
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                />
-                                <div
-                                    v-if="form.errors.first_name"
-                                    class="text-red-500 text-sm mt-1"
-                                >
-                                    {{ form.errors.first_name }}
-                                </div>
-                            </div>
-
-                            <div>
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Apellido</label
-                                >
-                                <input
-                                    v-model="form.last_name"
-                                    type="text"
-                                    required
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                />
-                                <div
-                                    v-if="form.errors.last_name"
-                                    class="text-red-500 text-sm mt-1"
-                                >
-                                    {{ form.errors.last_name }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Email</label
-                                >
-                                <input
-                                    v-model="form.email"
-                                    type="email"
-                                    required
-                                    @blur="validateEmail"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                    :class="{ 'border-red-500': emailError }"
-                                />
-                                <div
-                                    v-if="emailError"
-                                    class="text-red-500 text-sm mt-1"
-                                >
-                                    {{ emailError }}
-                                </div>
-                                <div
-                                    v-if="form.errors.email"
-                                    class="text-red-500 text-sm mt-1"
-                                >
-                                    {{ form.errors.email }}
-                                </div>
-                            </div>
-
-                            <div>
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Padre</label
-                                >
-                                <div class="relative">
-                                    <input
-                                        v-model="selectedParent.display_name"
-                                        type="text"
-                                        readonly
-                                        placeholder="Selecciona un padre"
-                                        @click="showParentModal = true"
-                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-50 cursor-pointer"
-                                    />
-                                    <div
-                                        class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
-                                    >
-                                        <svg
-                                            class="h-5 w-5 text-gray-400"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M19 9l-7 7-7-7"
-                                            ></path>
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div
-                                    v-if="form.errors.parent_id"
-                                    class="text-red-500 text-sm mt-1"
-                                >
-                                    {{ form.errors.parent_id }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Fecha de Nacimiento</label
-                                >
-                                <input
-                                    v-model="form.birth_date"
-                                    type="date"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                />
-                                <div
-                                    v-if="form.errors.birth_date"
-                                    class="text-red-500 text-sm mt-1"
-                                >
-                                    {{ form.errors.birth_date }}
-                                </div>
-                            </div>
-
-                            <div>
-                                <label
-                                    class="block text-sm font-medium text-gray-700"
-                                    >Género</label
-                                >
-                                <select
-                                    v-model="form.gender"
-                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                >
-                                    <option value="">Selecciona género</option>
-                                    <option value="masculino">Masculino</option>
-                                    <option value="femenino">Femenino</option>
-                                    <option value="otro">Otro</option>
-                                </select>
-                                <div
-                                    v-if="form.errors.gender"
-                                    class="text-red-500 text-sm mt-1"
-                                >
-                                    {{ form.errors.gender }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flex justify-end">
-                            <button
-                                type="submit"
-                                :disabled="form.processing"
-                                class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 transition-colors"
-                            >
-                                {{
-                                    form.processing
-                                        ? "Creando..."
-                                        : "Crear Estudiante"
-                                }}
-                            </button>
-                        </div>
-                    </form>
                 </div>
             </div>
 
@@ -387,18 +217,272 @@
             </div>
         </div>
 
+        <!-- Modal para crear estudiante -->
+        <div
+            v-if="showCreateStudentModal"
+            class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-40"
+            @click.self="showCreateStudentModal = false"
+        >
+            <div
+                class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white"
+            >
+                <div class="mt-3">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-medium text-gray-900">
+                            Crear Nuevo Estudiante
+                        </h3>
+                        <button
+                            @click="showCreateStudentModal = false"
+                            class="text-gray-400 hover:text-gray-600"
+                        >
+                            <svg
+                                class="h-6 w-6"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"
+                                ></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <form @submit.prevent="submitForm" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    class="block text-sm font-medium text-gray-700"
+                                    >Nombre</label
+                                >
+                                <input
+                                    v-model="form.first_name"
+                                    type="text"
+                                    required
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                                <div
+                                    v-if="form.errors.first_name"
+                                    class="text-red-500 text-sm mt-1"
+                                >
+                                    {{ form.errors.first_name }}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label
+                                    class="block text-sm font-medium text-gray-700"
+                                    >Apellido</label
+                                >
+                                <input
+                                    v-model="form.last_name"
+                                    type="text"
+                                    required
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                                <div
+                                    v-if="form.errors.last_name"
+                                    class="text-red-500 text-sm mt-1"
+                                >
+                                    {{ form.errors.last_name }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    class="block text-sm font-medium text-gray-700"
+                                    >Email</label
+                                >
+                                <input
+                                    v-model="form.email"
+                                    type="email"
+                                    required
+                                    @blur="validateEmail"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                    :class="{ 'border-red-500': emailError }"
+                                />
+                                <div
+                                    v-if="emailError"
+                                    class="text-red-500 text-sm mt-1"
+                                >
+                                    {{ emailError }}
+                                </div>
+                                <div
+                                    v-if="form.errors.email"
+                                    class="text-red-500 text-sm mt-1"
+                                >
+                                    {{ form.errors.email }}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label
+                                    class="block text-sm font-medium text-gray-700"
+                                    >Padre</label
+                                >
+                                <div class="relative">
+                                    <input
+                                        :value="
+                                            getParentDisplayName(selectedParent)
+                                        "
+                                        type="text"
+                                        readonly
+                                        placeholder="Selecciona un padre"
+                                        @click="showParentModal = true"
+                                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-50 cursor-pointer"
+                                    />
+                                    <div
+                                        class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                    >
+                                        <button
+                                            type="button"
+                                            @click="clearSelectedParent"
+                                            class="text-gray-400 hover:text-gray-600 mr-2"
+                                            title="Limpiar selección"
+                                        >
+                                            <svg
+                                                class="h-4 w-4"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M6 18L18 6M6 6l12 12"
+                                                ></path>
+                                            </svg>
+                                        </button>
+                                        <svg
+                                            class="h-5 w-5 text-gray-400"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M19 9l-7 7-7-7"
+                                            ></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div
+                                    v-if="form.errors.parent_id"
+                                    class="text-red-500 text-sm mt-1"
+                                >
+                                    {{ form.errors.parent_id }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    class="block text-sm font-medium text-gray-700"
+                                    >Fecha de Nacimiento</label
+                                >
+                                <input
+                                    v-model="form.birth_date"
+                                    type="date"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                />
+                                <div
+                                    v-if="form.errors.birth_date"
+                                    class="text-red-500 text-sm mt-1"
+                                >
+                                    {{ form.errors.birth_date }}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label
+                                    class="block text-sm font-medium text-gray-700"
+                                    >Género</label
+                                >
+                                <select
+                                    v-model="form.gender"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                >
+                                    <option value="">Selecciona género</option>
+                                    <option value="masculino">Masculino</option>
+                                    <option value="femenino">Femenino</option>
+                                    <option value="otro">Otro</option>
+                                </select>
+                                <div
+                                    v-if="form.errors.gender"
+                                    class="text-red-500 text-sm mt-1"
+                                >
+                                    {{ form.errors.gender }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-3">
+                            <button
+                                type="button"
+                                @click="showCreateStudentModal = false"
+                                class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="submit"
+                                :disabled="form.processing"
+                                class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50 transition-colors"
+                            >
+                                {{
+                                    form.processing
+                                        ? "Creando..."
+                                        : "Crear Estudiante"
+                                }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- Modal de selección de padre -->
         <div
             v-if="showParentModal"
             class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+            @click.self="showParentModal = false"
         >
             <div
                 class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
             >
                 <div class="mt-3">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">
-                        Seleccionar Padre
-                    </h3>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-medium text-gray-900">
+                            Seleccionar Padre
+                        </h3>
+                        <button
+                            @click="showParentModal = false"
+                            class="text-gray-400 hover:text-gray-600"
+                        >
+                            <svg
+                                class="h-6 w-6"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"
+                                ></path>
+                            </svg>
+                        </button>
+                    </div>
 
                     <!-- Búsqueda -->
                     <div class="mb-4">
@@ -413,28 +497,43 @@
                     <!-- Lista de padres -->
                     <div class="max-h-60 overflow-y-auto space-y-2">
                         <div
+                            v-if="filteredParents.length === 0"
+                            class="text-center py-4 text-gray-500"
+                        >
+                            {{
+                                parentSearch
+                                    ? "No se encontraron padres"
+                                    : "No hay padres registrados"
+                            }}
+                        </div>
+                        <div
                             v-for="parent in filteredParents"
                             :key="parent.id"
                             @click="selectParent(parent)"
-                            class="p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                            class="p-3 border rounded-lg cursor-pointer hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
                         >
                             <div class="flex items-center">
-                                <div class="flex-shrink-0 h-8 w-8">
+                                <div class="flex-shrink-0 h-10 w-10">
                                     <div
-                                        class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center"
+                                        class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center"
                                     >
                                         <span
-                                            class="text-xs font-medium text-green-600"
+                                            class="text-sm font-medium text-indigo-600"
                                         >
-                                            {{ parent.avatar_initial }}
+                                            {{
+                                                getInitials(
+                                                    parent.first_name,
+                                                    parent.last_name
+                                                )
+                                            }}
                                         </span>
                                     </div>
                                 </div>
-                                <div class="ml-3">
+                                <div class="ml-3 flex-1">
                                     <div
                                         class="text-sm font-medium text-gray-900"
                                     >
-                                        {{ parent.display_name }}
+                                        {{ getParentDisplayName(parent) }}
                                     </div>
                                     <div class="text-sm text-gray-500">
                                         @{{ parent.name }}
@@ -462,7 +561,7 @@
         <!-- Modal de edición de estudiante -->
         <div
             v-if="showEditStudentModal"
-            class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+            class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-40"
         >
             <div
                 class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white"
@@ -521,13 +620,39 @@
                             >
                             <div class="relative">
                                 <input
-                                    v-model="selectedParent.display_name"
+                                    :value="
+                                        getParentDisplayName(selectedParent)
+                                    "
                                     type="text"
                                     readonly
                                     placeholder="Selecciona un padre"
                                     @click="showParentModal = true"
                                     class="w-full border-gray-300 rounded-md shadow-sm bg-gray-50 cursor-pointer"
                                 />
+                                <div
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                >
+                                    <button
+                                        type="button"
+                                        @click="clearSelectedParent"
+                                        class="text-gray-400 hover:text-gray-600"
+                                        title="Limpiar selección"
+                                    >
+                                        <svg
+                                            class="h-4 w-4"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12"
+                                            ></path>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -736,8 +861,11 @@ const props = defineProps({
     grades: Array,
 });
 
+// Debug temporal
+console.log("Parents data:", props.parents);
+
 // Estados reactivos
-const showCreateForm = ref(false);
+const showCreateStudentModal = ref(false);
 const showParentModal = ref(false);
 const showEditStudentModal = ref(false);
 const showDeleteStudentModal = ref(false);
@@ -809,18 +937,21 @@ const submitForm = () => {
         onSuccess: () => {
             form.reset();
             selectedParent.value = {};
-            showCreateForm.value = false;
+            showCreateStudentModal.value = false;
         },
     });
 };
 
 const selectParent = (parent) => {
     selectedParent.value = parent;
+    parentSearch.value = ""; // Limpiar búsqueda
     showParentModal.value = false;
 };
 
 const clearSelectedParent = () => {
     selectedParent.value = {};
+    form.parent_id = "";
+    editStudentForm.parent_id = "";
 };
 
 const editStudent = (student) => {
@@ -832,8 +963,11 @@ const editStudent = (student) => {
     editStudentForm.birth_date = student.birth_date;
     editStudentForm.gender = student.gender;
 
+    // Cargar el padre actual del estudiante
     if (student.parent) {
         selectedParent.value = student.parent;
+    } else {
+        selectedParent.value = {};
     }
 
     showEditStudentModal.value = true;
@@ -919,6 +1053,24 @@ const cancelAssignGrade = () => {
     showAssignGradeModal.value = false;
     studentToAssignGrade.value = null;
     assignGradeForm.reset();
+};
+
+const getParentDisplayName = (parent) => {
+    if (!parent || !parent.id) return "";
+
+    if (parent.display_name) {
+        return parent.display_name;
+    }
+
+    if (parent.first_name && parent.last_name) {
+        return `${parent.first_name} ${parent.last_name}`;
+    }
+
+    if (parent.name) {
+        return parent.name;
+    }
+
+    return "";
 };
 
 const getInitials = (firstName, lastName) => {
