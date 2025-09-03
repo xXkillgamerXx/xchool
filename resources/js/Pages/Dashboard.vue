@@ -45,6 +45,28 @@ defineProps({
                     </div>
                 </div>
 
+                <!-- Enlace al perfil para todos los usuarios -->
+                <div
+                    class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6"
+                >
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-medium text-green-900">
+                                Tu Perfil
+                            </h3>
+                            <p class="text-green-700">
+                                Completa tu información personal
+                            </p>
+                        </div>
+                        <Link
+                            :href="route('profile.edit')"
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                        >
+                            Editar Perfil
+                        </Link>
+                    </div>
+                </div>
+
                 <!-- Información del usuario -->
                 <div
                     class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6"

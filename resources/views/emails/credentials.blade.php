@@ -65,7 +65,7 @@
     </div>
     
     <div class="content">
-        <h2>¡Bienvenido a Xchool, {{ $user->name }}!</h2>
+        <h2>¡Bienvenido a Xchool!</h2>
         
         <p>Tu cuenta ha sido creada exitosamente. Aquí tienes tus credenciales de acceso para iniciar sesión:</p>
         
@@ -80,7 +80,7 @@
         </div>
         
         <div class="warning-box">
-            <strong>⚠️ Importante:</strong> Usa tu <strong>Usuario</strong> y <strong>Contraseña</strong> para iniciar sesión. Por seguridad, te recomendamos cambiar tu contraseña después del primer login.
+            <strong>⚠️ Importante:</strong> Usa tu <strong>Usuario</strong> y <strong>Contraseña</strong> para iniciar sesión. Después podrás completar tu perfil con tu nombre y apellido.
         </div>
         
         <p>Para acceder a tu cuenta, haz clic en el botón de abajo:</p>

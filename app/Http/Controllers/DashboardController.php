@@ -36,6 +36,10 @@ class DashboardController extends Controller
         $dashboardData = [
             'user' => [
                 'name' => $user->name,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'full_name' => $user->full_name,
+                'display_name' => $user->display_name,
                 'email' => $user->email,
                 'role' => $user->role->name,
                 'role_display' => $user->role->display_name,

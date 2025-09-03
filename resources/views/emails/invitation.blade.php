@@ -57,7 +57,7 @@
     </div>
     
     <div class="content">
-        <h2>¡Hola {{ $invitation->name }}!</h2>
+        <h2>¡Hola!</h2>
         
         <p>Has sido invitado a unirte a <strong>Xchool</strong>, nuestra plataforma educativa.</p>
         

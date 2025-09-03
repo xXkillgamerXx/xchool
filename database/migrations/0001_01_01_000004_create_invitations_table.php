@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('email');
             $table->string('name');
+            $table->string('first_name')->nullable();
+            $table->string('last_name')->nullable();
             $table->foreignId('role_id')->constrained('roles')->onDelete('cascade');
             $table->string('token', 64)->unique();
             $table->timestamp('expires_at');

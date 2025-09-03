@@ -20,6 +20,8 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
         'role_id',
@@ -102,5 +104,24 @@ class User extends Authenticatable
     public function isSuplidor(): bool
     {
         return $this->role->isSuplidor();
+    }
+
+    /**
+     * Get the user's full name.
+     */
+    public function getFullNameAttribute(): string
+    {
+        if ($this->first_name && $this->last_name) {
+            return $this->first_name . ' ' . $this->last_name;
+        }
+        return $this->name;
+    }
+
+    /**
+     * Get the user's display name (full name or username).
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        return $this->full_name ?: $this->name;
     }
 }

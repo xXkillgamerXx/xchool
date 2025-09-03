@@ -56,12 +56,12 @@ class UserManagementController extends Controller
         $role = Role::find($request->role_id);
         
         // Generar nombre de usuario automáticamente
-        $username = $this->generateUsername($role->name);
+        $usernameData = $this->generateUsername($role->name);
 
         // Crear la invitación
         $invitation = Invitation::create([
             'email' => $request->email,
-            'name' => $username, // Usar el username generado
+            'name' => $usernameData['username'], // Usar el username generado
             'role_id' => $request->role_id,
             'token' => Invitation::generateToken(),
             'expires_at' => now()->addDays(7), // Expira en 7 días
@@ -109,7 +109,7 @@ class UserManagementController extends Controller
     /**
      * Generate username based on role.
      */
-    private function generateUsername(string $roleName): string
+    private function generateUsername(string $roleName): array
     {
         $prefix = match($roleName) {
             'profesor' => 'profesor',
@@ -127,7 +127,11 @@ class UserManagementController extends Controller
             $counter++;
         } while ($exists);
 
-        return $username;
+        return [
+            'username' => $username,
+            'first_name' => null, // No generar nombre por defecto
+            'last_name' => null   // No generar apellido por defecto
+        ];
     }
 
     /**
